@@ -59,12 +59,6 @@ int hs_simulate_all_games(
                 max_n_simulated, *n_games_simulated, duration);
         exit(EXIT_SUCCESS);
     }
-    if (!((*n_traversed) % 1000000)) {
-        clock_t end = clock();
-        float duration = (float)(end - *start) / CLOCKS_PER_SEC;
-        printf("[INFO] hs_simulate_all_games(): %um (/max: %um) states traversed in %.3fs (%zum games simulated).\n", 
-                (*n_traversed) / 1000000, max_n_states / 1000000, duration, (*n_games_simulated) / 1000000);
-    }
     uint32_t state_ind = as.state - shift_pos;
     double n_black_victories = 0.0;
     Color victory = GET_VICTORY(as.state, as.actions);
@@ -79,7 +73,6 @@ int hs_simulate_all_games(
     }
     uint8_t n_max_possible_actions = (as.state & 1) ? N_WHITE_ACTIONS: (N_PAWNS - 1) * N_BLACK_ACTIONS;
     uint8_t current_action;
-    Record returned_record = {0};
     ActionState copied_as = {0};
     int ret;
     uint32_t next_state_ind = 0;
@@ -142,10 +135,10 @@ int persist_records(
         return EXIT_FAILURE;
     }
     uint32_t n_states = 0, n_black_force = 0, n_white_force = 0;
-    fprintf(f, "state,n_games,n_black_victories,can_force_victory\n");
+    fprintf(f, "state,perc_black_victory,can_force_victory\n");
     for (uint32_t i = 0; i < n_records; i++) {
         if (records[i].n_games == 0) continue;  // nothing at i
-        fprintf(f, "%x,%.2f,%.2f,%x\n", i + shift_pos, records[i].n_games, records[i].n_black_victories, records[i].can_force_victory);
+        fprintf(f, "%x,%.2f,%x\n", i + shift_pos, records[i].n_black_victories / records[i].n_games * 100, records[i].can_force_victory);
         n_states++;
         if (((i + shift_pos) & 1) && records[i].can_force_victory)
             n_white_force++;
