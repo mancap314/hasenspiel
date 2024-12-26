@@ -1,5 +1,6 @@
 #include <string.h>
 #include "hasen_utils.h"
+#include "hasen_play.h"
 
 void simulate_random_games(uint16_t n_games) {
     uint32_t n_games_simulated = 0;

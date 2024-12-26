@@ -135,7 +135,6 @@ int persist_records(
         return EXIT_FAILURE;
     }
     uint32_t n_states = 0, n_black_force = 0, n_white_force = 0;
-    fprintf(f, "state,perc_black_victory,can_force_victory\n");
     for (uint32_t i = 0; i < n_records; i++) {
         if (records[i].n_games == 0) continue;  // nothing at i
         fprintf(f, "%x,%.2f,%x\n", i + shift_pos, records[i].n_black_victories / records[i].n_games * 100, records[i].can_force_victory);

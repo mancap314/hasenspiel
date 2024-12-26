@@ -17,6 +17,8 @@
 #define N_WHITE_ACTIONS     (4)
 #define N_BLACK_ACTIONS     (2)
 
+#define MAX_PATH            (260)
+
 // s: state, i: index of pawn, a: index of action
 #define ACTION_MASK(i)          (1 << (i))
 #define GET_POSITION(s, i)      (((s) >> (1 + (i) * BITS_PER_SQUARE)) & POSITION_MASK)

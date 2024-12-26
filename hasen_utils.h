@@ -4,7 +4,6 @@
 #include <time.h>
 #include "hasen.h"
 
-#define MAX_PATH (260)
 #define MIN(a, b) ((b) > (a) ? (a) : (b))
 
 typedef struct {
