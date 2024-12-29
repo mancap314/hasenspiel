@@ -1,6 +1,12 @@
 #include "hasen.h"
 
 
+void hs_copy_actionstate(ActionState *as_to, const ActionState *as_from) {
+    as_to->state = as_from->state;
+    as_to->actions = as_from->actions; 
+}
+
+
 uint8_t hs_get_possible_actions(const uint32_t state) {
     uint16_t possible_actions;
     uint8_t i, j;

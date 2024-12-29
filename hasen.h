@@ -11,6 +11,7 @@
 #define N_COLS              (4)  // four black squares on each rows 
 #define BITS_PER_SQUARE     (5)  // /LOG2(N_SQUARES)\, or min number n s.t. 2 ** n >= N_SQUARES
 
+#define N_MAX_MOVES         (8)
 #define N_SQUARES           (N_ROWS * N_COLS)
 #define POSITION_MASK       ((1 << (BITS_PER_SQUARE)) - 1)
 #define ACTIONS             (int8_t[]){(N_COLS - 1), (N_COLS), (-N_COLS - 1), (-N_COLS)}
@@ -18,6 +19,7 @@
 #define N_BLACK_ACTIONS     (2)
 
 #define MAX_PATH            (260)
+#define MIN(a, b) ((b) > (a) ? (a) : (b))
 
 // s: state, i: index of pawn, a: index of action
 #define ACTION_MASK(i)          (1 << (i))
@@ -54,5 +56,6 @@ void hs_init_actionstate_forward(ActionState *as);
 void hs_print_actionstate(const ActionState *as);
 int hs_perform_action(ActionState *as, const uint8_t action);
 uint32_t get_max_position();
+void hs_copy_actionstate(ActionState *as_to, const ActionState *as_from); 
 
 #endif

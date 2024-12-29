@@ -4,7 +4,6 @@
 #include <time.h>
 #include "hasen.h"
 
-#define MIN(a, b) ((b) > (a) ? (a) : (b))
 
 typedef struct {
     size_t n_moves;

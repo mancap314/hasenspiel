@@ -83,5 +83,40 @@ int main(int argc, char *argv[argc + 1]) {
     }
     free(records);
     printf("[INFO] All states persisted at %s\n", fpath);
+
+
+    // Load estates
+    // First find out how many lines in the file
+    FILE *f = fopen(fpath, "r");
+    if (NULL == f) {
+        perror("[ERROR] Could not open file at in read mode");
+        return EXIT_FAILURE;
+    }
+    fseek(f, 0, SEEK_END);
+    uint32_t n_estates = ftell(f);
+    fseek(f, 0, SEEK_SET);
+    n_estates--;  // last line of file is empty
+
+    estate_t *estates = malloc(n_estates * sizeof(estate_t));
+    if (NULL == estates) {
+        perror("[ERROR] Failed to allocate estates");
+        return EXIT_FAILURE;
+    }
+    memset(estates, 0, n_estates * sizeof(estate_t));
+    ret = load_all_states(f, n_estates, estates);
+    if (ret != EXIT_SUCCESS) {
+        fprintf(stderr, "[ERROR] Could not load states at %s.\n", fpath);
+        return EXIT_FAILURE;
+    }
+    uint8_t n_possible_moves = 0;
+    estate_t next_estates[N_MAX_MOVES] = {0};
+    for(uint16_t n_moves = 0; n_moves < 10; n_moves++) {
+        ret = order_possible_moves(&as, n_estates, estates, next_estates, &n_possible_moves);
+        if (ret != EXIT_SUCCESS) {
+            fprintf(stderr, "[ERROR] Could not order moves.\n");
+            return EXIT_FAILURE;
+        }
+        hs_print_actionstate(&as);
+    }
     return EXIT_SUCCESS;
 }

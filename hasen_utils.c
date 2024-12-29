@@ -35,11 +35,6 @@ int hs_random_game(ActionState *as, hs_game_res *res) {
     return EXIT_SUCCESS;
 }
 
-void hs_copy_actionstate(ActionState *as_to, const ActionState *as_from) {
-    as_to->state = as_from->state;
-    as_to->actions = as_from->actions; 
-}
-
 int hs_simulate_all_games(
     const ActionState as, 
     size_t *n_traversed, 
@@ -56,7 +51,7 @@ int hs_simulate_all_games(
         float duration = (float)(end - *start) / CLOCKS_PER_SEC;
         printf("[INFO] hs_simulate_all_games(): reached limit = %zu of number of states traversed in %.3fs "
                 "(%zu games simulated). Exiting.\n", 
-                max_n_simulated, *n_games_simulated, duration);
+                max_n_simulated, duration, *n_games_simulated);
         exit(EXIT_SUCCESS);
     }
     uint32_t state_ind = as.state - shift_pos;
