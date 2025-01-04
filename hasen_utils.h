@@ -42,4 +42,6 @@ int persist_records(
     char filepath[MAX_PATH - 1]
 );
 
+uint32_t n_lines_in_file(FILE *f);
+
 #endif

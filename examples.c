@@ -92,10 +92,7 @@ int main(int argc, char *argv[argc + 1]) {
         perror("[ERROR] Could not open file at in read mode");
         return EXIT_FAILURE;
     }
-    fseek(f, 0, SEEK_END);
-    uint32_t n_estates = ftell(f);
-    fseek(f, 0, SEEK_SET);
-    n_estates--;  // last line of file is empty
+    uint32_t n_estates = n_lines_in_file(f);
 
     estate_t *estates = malloc(n_estates * sizeof(estate_t));
     if (NULL == estates) {
@@ -108,14 +105,22 @@ int main(int argc, char *argv[argc + 1]) {
         fprintf(stderr, "[ERROR] Could not load states at %s.\n", fpath);
         return EXIT_FAILURE;
     }
+    // Each player on turn plays its best available move n_moves times
+    uint8_t n_moves = 10;
     uint8_t n_possible_moves = 0;
     estate_t next_estates[N_MAX_MOVES] = {0};
-    for(uint16_t n_moves = 0; n_moves < 10; n_moves++) {
+    for(uint16_t n_moves_played = 0; n_moves_played < n_moves; n_moves_played++) {
         ret = order_possible_moves(&as, n_estates, estates, next_estates, &n_possible_moves);
         if (ret != EXIT_SUCCESS) {
             fprintf(stderr, "[ERROR] Could not order moves.\n");
             return EXIT_FAILURE;
         }
+        for (uint8_t i = 0; i < n_possible_moves; i++) {
+            printf("Estate %u: state=%u, perc_victory=%.2f, can_force=%d\n", 
+                    i, next_estates[i].state, next_estates[i].perc_victory, next_estates[i].can_force_victory);
+        }
+        as.state = next_estates[0].state;
+        as.actions = hs_get_possible_actions(as.state);
         hs_print_actionstate(&as);
     }
     return EXIT_SUCCESS;

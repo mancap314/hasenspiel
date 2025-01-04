@@ -15,7 +15,7 @@ hasen_test: hasen_test.c hasen.c
 
 examples: examples.c hasen_play.c hasen_utils.c hasen.c
 	$(CC) -o $@.$(EXT) $^ $(CFLAGS)
-	./$@.$(EXT)
+	# ./$@.$(EXT)
 
 .PHONY: clean
 

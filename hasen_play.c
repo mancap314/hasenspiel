@@ -21,16 +21,20 @@ int find_estate(
     estate_t *estate
 ) {
     uint32_t current_ind = n_estates / 2;
-    uint32_t current_delta = n_estates / 2;
+    uint32_t current_delta = n_estates / 2, previous_delta = 0;
+    bool current_direction, previous_direction = true;
     while (estates[current_ind].state != state) {
-        if (current_delta == 0) {
-            fprintf(stderr, "[ERROR] find_estate(): could not find state %u in array of estates.\n", state);
+        current_direction = (state < estates[current_ind].state);
+        if (previous_delta == 1 && current_delta == 1 && previous_direction != current_direction) {
+            fprintf(stderr, "[ERROR] Could not find state %u in estates.\n", state);
             return EXIT_FAILURE;
-        }
-        current_ind = (state < estates[current_ind].state) 
-            ? current_ind - current_delta
+        }   
+        current_ind = current_direction
+            ? (current_delta <= current_ind ? current_ind - current_delta : 0)
             : MIN(current_ind + current_delta, n_estates - 1);
-        current_delta /= 2;
+        previous_delta = current_delta;
+        current_delta = MAX(current_delta / 2, 1);
+        previous_direction = current_direction;
     }
     estate->state = state;
     estate->perc_victory = estates[current_ind].perc_victory;

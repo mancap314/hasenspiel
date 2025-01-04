@@ -144,3 +144,11 @@ int persist_records(
             n_states, n_black_force, (float)n_black_force / (float)n_states * 100.0, n_white_force, (float)n_white_force / (float)n_states * 100.0);
     return EXIT_SUCCESS;
 }
+
+uint32_t n_lines_in_file(FILE *f) {
+    uint32_t n_lines = 0;
+    while(!feof(f)) 
+        n_lines += (uint32_t)(fgetc(f) == '\n');
+    fseek(f, 0L, SEEK_SET);
+    return n_lines;
+}

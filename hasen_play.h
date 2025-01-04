@@ -8,7 +8,7 @@ typedef struct {
     uint32_t state;
     float perc_victory;
     bool can_force_victory;
-} estate_t;
+} estate_t;  // enhanced state
 
 
 int load_all_states(FILE *f, uint32_t n_estates, estate_t estates[n_estates]); 
