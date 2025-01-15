@@ -15,7 +15,7 @@ uint8_t hs_get_random_action(const ActionState *as) {
 }
 
 int hs_random_game(ActionState *as, hs_game_res *res) {
-    Color victory = GET_VICTORY(as->state, as->actions);
+    Color_e victory = GET_VICTORY(as->state, as->actions);
     uint8_t random_action;
     size_t n_moves = 0;
     int ret;
@@ -56,7 +56,7 @@ int hs_simulate_all_games(
     }
     uint32_t state_ind = as.state - shift_pos;
     double n_black_victories = 0.0;
-    Color victory = GET_VICTORY(as.state, as.actions);
+    Color_e victory = GET_VICTORY(as.state, as.actions);
     if (victory != NOCOLOR) {
         ++(*n_games_simulated);
         if (!(as.state & 1))
@@ -152,3 +152,4 @@ uint32_t n_lines_in_file(FILE *f) {
     fseek(f, 0L, SEEK_SET);
     return n_lines;
 }
+

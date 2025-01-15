@@ -7,7 +7,7 @@
 
 typedef struct {
     size_t n_moves;
-    Color victory;
+    Color_e victory;
 } hs_game_res;
 
 typedef struct {

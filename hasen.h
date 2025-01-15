@@ -26,7 +26,7 @@
 #define ACTION_MASK(i)          (1 << (i))
 #define GET_POSITION(s, i)      (((s) >> (1 + (i) * BITS_PER_SQUARE)) & POSITION_MASK)
 #define SET_POSITION(s, i, p)   ((s) = ((s) & ~(POSITION_MASK << (1 + (i) * BITS_PER_SQUARE))) | ((p) << (1 + (i) * BITS_PER_SQUARE)))
-#define SET_TURN(s, c)          (((c) == WHITE) ? ((s) |= 1): ((s) &= ~1))
+#define SET_TURN(s, c)          (((c) == WHITE_C) ? ((s) |= 1): ((s) &= ~1))
 #define CHANGE_TURN(s)          ((s) ^= 1)
 #define SHIFT(s, i)             ((GET_POSITION(s, i) % (2 * N_COLS) < N_COLS) ? 0: 1)  // shift on action when pawn on an even row
 #define GET_ACTION(s, i, a)     (ACTIONS[a] + SHIFT(s, i))
@@ -37,7 +37,7 @@
 #define IS_ON_LEFT_EDGE(s, i)   (!(GET_POSITION(s, i) % (2 * N_COLS)))
 #define IS_ON_RIGHT_EDGE(s, i)  (!((GET_POSITION(s, i) + 1) % (2 * N_COLS)))
 #define IS_FEASIBLE(s, i, a)    (IS_IN_RANGE(s, i, a) && !(((a) == 0 || (a) == 2) && IS_ON_LEFT_EDGE(s, i)) && !(((a) == 1 || (a) == 3) && IS_ON_RIGHT_EDGE(s, i)))
-#define GET_VICTORY(s, a)       ((((s) & 1) && !(a)) ? BLACK : ((GET_POSITION(s, 0) < GET_POSITION(s, N_PAWNS - 1) + N_COLS - 1) || (!(s & 1) && (!a)) ? WHITE : NOCOLOR))
+#define GET_VICTORY(s, a)       ((((s) & 1) && !(a)) ? BLACK_C : ((GET_POSITION(s, 0) < GET_POSITION(s, N_PAWNS - 1) + N_COLS - 1) || (!(s & 1) && (!a)) ? WHITE_C : NOCOLOR))
 #define MIN_REACHABLE_POS(s)    ((s) & 1 ? (s) - (4 * (N_COLS - 1)): (s) - 12)
 
 typedef struct {
@@ -45,11 +45,11 @@ typedef struct {
     uint8_t actions;
 } ActionState;
 
-typedef enum Color {
+typedef enum {
     NOCOLOR = 0,
-    BLACK = 1,
-    WHITE
-} Color;
+    BLACK_C,
+    WHITE_C
+} Color_e;
 
 uint8_t hs_get_possible_actions(const uint32_t state);
 void hs_init_actionstate(ActionState *as);

@@ -46,7 +46,7 @@ void hs_init_actionstate(ActionState *as) {
     SET_POSITION(as->state, 0, N_SQUARES - 1 - N_COLS / 2);  // white starts in the middle of last row
     for (uint8_t i = 1; i < N_PAWNS; i++)
         SET_POSITION(as->state, i, N_PAWNS - 1 - i);
-    SET_TURN(as->state, WHITE);
+    SET_TURN(as->state, WHITE_C);
     as->actions = hs_get_possible_actions(as->state);
 }
 
@@ -54,7 +54,7 @@ void hs_init_actionstate_forward(ActionState *as) {
     SET_POSITION(as->state, 0, N_SQUARES - 1 - N_COLS / 2 - (N_PAWNS - 1) * N_COLS);  // white starts in the middle of last row
     for (uint8_t i = 1; i < N_PAWNS; i++)
         SET_POSITION(as->state, i, N_COLS + N_PAWNS - 1 - i);
-    SET_TURN(as->state, WHITE);
+    SET_TURN(as->state, WHITE_C);
     as->actions = hs_get_possible_actions(as->state);
 }
 

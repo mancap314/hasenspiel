@@ -18,7 +18,7 @@ void simulate_random_games(uint16_t n_games) {
             fprintf(stderr, "[ERROR] Could not simulate random game");
             continue;
         }
-        if (res.victory == BLACK) n_black_victories++;
+        if (res.victory == BLACK_C) n_black_victories++;
         if (res.n_moves > max_n_moves) max_n_moves = res.n_moves;
         avg_n_moves = (avg_n_moves * (float)n_games_simulated + (float)res.n_moves) / (float)(++n_games_simulated);
     }

@@ -8,6 +8,9 @@ on a black square of the last row. White starts.
 - Others: White and Black play alternatively. No piece can be taken, no piece can jump over another piece.
 - Have fun
 
+See [blog article](https://mancap314.github.io/hasenspiel.html) for more
+in-depth explainations about how this game is solved.
+
 ## Code
 `make examples` to create the executable. The code in [examples.c](examples.c) shows how to generate an arbitrary number of random games, and how to explore iteratively all states downstream, starting from a given state.
 

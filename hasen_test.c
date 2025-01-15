@@ -18,7 +18,7 @@ bool test_get_possible_actions() {
     for (uint8_t i = 1; i < N_PAWNS; i++)
         SET_POSITION(as.state, N_PAWNS - i, i + N_COLS - 1);
     SET_POSITION(as.state, 0, N_PAWNS + N_COLS);
-    SET_TURN(as.state, BLACK);
+    SET_TURN(as.state, BLACK_C);
     as.actions = hs_get_possible_actions(as.state);
     hs_print_actionstate(&as);
     bool is_correct = (as.actions == 0b1101101);
@@ -31,13 +31,13 @@ bool test_get_victory() {
     bool ret = (GET_VICTORY(as.state, as.actions) == NOCOLOR);
     SET_POSITION(as.state, N_PAWNS - 1, GET_POSITION(as.state, 0) + GET_ACTION(as.state, 0, 2));
     SET_POSITION(as.state, N_PAWNS - 2, GET_POSITION(as.state, 0) + GET_ACTION(as.state, 0, 3));
-    SET_TURN(as.state, WHITE);
+    SET_TURN(as.state, WHITE_C);
     as.actions = hs_get_possible_actions(as.state);
-    ret &= (GET_VICTORY(as.state, as.actions) == BLACK);
+    ret &= (GET_VICTORY(as.state, as.actions) == BLACK_C);
     SET_POSITION(as.state, 0, 1);
-    SET_TURN(as.state, BLACK);
+    SET_TURN(as.state, BLACK_C);
     as.actions = hs_get_possible_actions(as.state);
-    ret &= (GET_VICTORY(as.state, as.actions) == WHITE);
+    ret &= (GET_VICTORY(as.state, as.actions) == WHITE_C);
     return ret;
 }
 
@@ -48,7 +48,7 @@ bool test_perform_action() {
     for (i = 1; i < N_PAWNS; i++)
         SET_POSITION(as.state, N_PAWNS - i, i + N_COLS - 1);
     SET_POSITION(as.state, 0, N_PAWNS + N_COLS);
-    SET_TURN(as.state, BLACK);
+    SET_TURN(as.state, BLACK_C);
     as.actions = hs_get_possible_actions(as.state);
     puts("[INFO] Actionstate before action:");
     hs_print_actionstate(&as);
