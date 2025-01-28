@@ -8,6 +8,7 @@ else
 endif
 
 CFLAGS = -O3
+RAYFLAGS = -lraylib -lm
 
 hasen_test: hasen_test.c hasen.c
 	$(CC) -o $@.$(EXT) $^ $(CFLAGS)
@@ -16,6 +17,11 @@ hasen_test: hasen_test.c hasen.c
 examples: examples.c hasen_play.c hasen_utils.c hasen.c
 	$(CC) -o $@.$(EXT) $^ $(CFLAGS)
 	# ./$@.$(EXT)
+
+hasenray: hasenray.c hasen_play.c hasen_utils.c hasen.c
+	$(CC) -o $@.$(EXT) $^ $(CFLAGS) $(RAYFLAGS)
+	./$@.$(EXT)
+
 
 .PHONY: clean
 
