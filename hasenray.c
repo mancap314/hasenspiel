@@ -1,15 +1,14 @@
 #include "hasenray.h"
 
 Vector2 pos2RectPos(uint8_t pos, Color_e player_color) {
-    // TODO: fix
-    uint8_t row = (pos / N_COLS);
+    uint8_t row = N_ROWS - 1 - (pos / N_COLS);
     uint8_t col = (pos % N_COLS) * 2;
+    if (!(row % 2))
+        col++;
     if (player_color == WHITE_C) {
         row = N_ROWS - 1 - row;
         col = 2 * N_COLS - 1 - col;
     }
-    if (row % 2)
-        col--;
     return (Vector2){col * SQUARE_SIZE, row * SQUARE_SIZE};
 }
 
@@ -19,23 +18,25 @@ uint8_t mousePos2Pos(
 ) {
     printf("[DEBUG] mousePos2Pos(): mousePosition(%.2f, %.2f)\n", mousePosition->x, mousePosition->y);
     // Check is the mouse is on the board at all
-    if (mousePosition->x > N_COLS * SQUARE_SIZE || 
+    if (mousePosition->x > 2 * N_COLS * SQUARE_SIZE || 
             mousePosition->y > N_ROWS * SQUARE_SIZE)
         return N_PAWNS;
     // TODO: potentially have to fix here
     uint8_t col = (uint8_t)(mousePosition->x / SQUARE_SIZE); 
-    uint8_t row = (uint8_t)(mousePosition->y / SQUARE_SIZE); 
+    uint8_t row = N_ROWS - 1 - (uint8_t)(mousePosition->y / SQUARE_SIZE); 
+    // Check if it's black square or not
+    if ((row % 2 && !(col % 2)) || (!(row % 2) && (col % 2)))
+        return N_PAWNS;
+    col /= 2;
+    if (!(row % 2))
+        col++;
     if (player_color == WHITE_C) {
         row = N_ROWS - 1 - row;
         col = 2 * N_COLS - 1 - col;
     }
-    // Check if it's black square or not
-    if ((row % 2 && !(col % 2)) || (!(row % 2) && (col % 2)))
-        return N_PAWNS;
-    if (row % 2)
-        col--;
-   uint8_t pos = N_COLS * row + col / 2;  
-   return pos;
+    uint8_t pos = N_COLS * row + col - 1;  
+    printf("[DEBUG] mousePos2Pos(): row: %u, col: %u, pos: %u\n", row, col, pos);
+    return pos;
 }
 
 
@@ -74,7 +75,10 @@ void drawBoard(
         // Put a green frame around the selected pawn
         rectPos = pos2RectPos(GET_POSITION(state, pawn_selected), player_color);
         Rectangle selectedRectangle = (Rectangle){rectPos.x, rectPos.y, SQUARE_SIZE, SQUARE_SIZE};
-        DrawRectangleLinesEx(selectedRectangle, 1, GREEN);
+        DrawRectangleLinesEx(selectedRectangle, 3, GREEN);
+        for (i = 0; i < N_WHITE_ACTIONS; i++)
+            printf("%u, ", possible_squares[i]);
+        printf("\n");
         // Put a small green circle in the possible squares
         for (i = 0; i < N_WHITE_ACTIONS; i++) {
             if (possible_squares[i] < N_SQUARES) {
@@ -82,7 +86,7 @@ void drawBoard(
                 DrawCircle(
                     rectPos.x + (float)SQUARE_SIZE / 2.0,
                     rectPos.y + (float)SQUARE_SIZE / 2.0,
-                    (float)SQUARE_SIZE / 3.0,
+                    (float)SQUARE_SIZE / 10.0,
                     GREEN
                 );
             }
@@ -107,7 +111,7 @@ void handleBoardClick(
     const Vector2 *mousePosition, 
     const uint32_t state,
     const bool player_on_turn, 
-    const uint8_t possible_squares[N_MAX_MOVES],
+    const uint8_t possible_squares[N_WHITE_ACTIONS],
     const Color_e player_color,
     uint8_t *pawn_selected,
     uint8_t *action_selected
@@ -144,16 +148,19 @@ void get_possible_squares(
 {
     if (pawn_selected >= N_PAWNS)
         return;
-    if ((as.state & 1) && pawn_selected > 0) {
+    if (!(as.state & 1) && pawn_selected > 0) {
         fprintf(stderr, "[ERROR] get_possible_squares(): white on turn but black pawn %u selected.\n", pawn_selected);
         return;
     }
-    if (!(as.state & 1) && pawn_selected == 0) {
+    if ((as.state & 1) && pawn_selected == 0) {
         fprintf(stderr, "[ERROR] get_possible_squares(): black on turn but white pawn 0 selected.\n");
         return;
     }
     as.actions = hs_get_possible_actions(as.state);
     uint8_t max_a = (as.state & 1) ? N_WHITE_ACTIONS : N_BLACK_ACTIONS;
+    if (!(as.state & 1)) {
+       as.actions <<= N_BLACK_ACTIONS * (pawn_selected - 1); 
+    }
     for (uint8_t a = 0; a < max_a; a++) {
         if (as.actions & ACTION_MASK(a))
             possible_squares[a] = GET_POSITION(as.state, pawn_selected) +  GET_ACTION(as.state, pawn_selected, a);
@@ -164,6 +171,28 @@ void get_possible_squares(
 
 int main(void)
 {
+    // Load estates
+    // First find out how many lines in the file
+    FILE *f = fopen(fpath, "r");
+    if (NULL == f) {
+        perror("[ERROR] Could not open file at in read mode");
+        return EXIT_FAILURE;
+    }
+    uint32_t n_estates = n_lines_in_file(f);
+
+    estate_t *estates = malloc(n_estates * sizeof(estate_t));
+    if (NULL == estates) {
+        perror("[ERROR] Failed to allocate estates");
+        return EXIT_FAILURE;
+    }
+    memset(estates, 0, n_estates * sizeof(estate_t));
+    ret = load_all_states(f, n_estates, estates);
+    if (ret != EXIT_SUCCESS) {
+        fprintf(stderr, "[ERROR] Could not load states at %s.\n", fpath);
+        return EXIT_FAILURE;
+    }
+
+    // Start with UI
     const int screenWidth = 2 * SQUARE_SIZE * N_COLS;
     const int screenHeight = SQUARE_SIZE * N_ROWS; 
     const int targetFPS = 60;
@@ -199,6 +228,7 @@ int main(void)
     uint8_t pawn_selected = N_PAWNS;
     uint8_t action_selected = N_WHITE_ACTIONS;
     uint8_t possible_squares[N_WHITE_ACTIONS] = {0};
+    uint8_t n_possible_moves = 0;
     Color_e winner = NOCOLOR;
 
     while(!WindowShouldClose()) {
@@ -241,6 +271,12 @@ int main(void)
             }
             if ((!player_on_turn) && winner == NOCOLOR) {
                 // TODO: perform computer move
+                ret = order_possible_moves(&as, n_estates, estates, next_estates, &n_possible_moves);
+                if (ret != EXIT_SUCCESS) {
+                    fprintf(stderr, "[ERROR] Could not order moves.\n");
+                    return EXIT_FAILURE;
+                }
+                // TODO: CHOSE THE MOVE BY STRENGTH PROBA
                 player_on_turn = true;
             }
         EndDrawing();
