@@ -116,6 +116,8 @@ void handleBoardClick(
     uint8_t *pawn_selected,
     uint8_t *action_selected
 ) {
+    if (!player_on_turn)
+        return;
     // Get square index corresponding to mouse position:
     const uint8_t pos = mousePos2Pos(mousePosition, player_color); 
     if (pos >= N_PAWNS)
@@ -224,12 +226,18 @@ int main(void)
     hs_init_actionstate(&as);
 
     Color_e player_color = BLACK_C;
-    bool player_on_turn = true;
+    bool player_on_turn = (player_color == WHITE_C) ? true: false;
     uint8_t pawn_selected = N_PAWNS;
     uint8_t action_selected = N_WHITE_ACTIONS;
     uint8_t possible_squares[N_WHITE_ACTIONS] = {0};
     uint8_t n_possible_moves = 0;
+    estate_t next_estates[N_MAX_MOVES] = {0};
     Color_e winner = NOCOLOR;
+    float computer_strength = 1.0;  // must be between 0 and 1 (included)
+    srand((unsigned int)time(NULL));
+    float randomFloat;
+    uint8_t i;
+    float move_rand;
 
     while(!WindowShouldClose()) {
         Vector2 mousePosition = GetMousePosition();
@@ -276,7 +284,19 @@ int main(void)
                     fprintf(stderr, "[ERROR] Could not order moves.\n");
                     return EXIT_FAILURE;
                 }
-                // TODO: CHOSE THE MOVE BY STRENGTH PROBA
+                // Chose computer's move
+                for (i = 0; i < n_possible_moves; i++) {
+                    if (i == n_possible_moves - 1)
+                        as.state = next_estates[i].state;
+                    randomFloat = (float)rand() / RAND_MAX;
+                    if (randomFloat <= computer_strength)
+                        as.state = next_estates[i].state;
+                }
+                pawn_selected = N_PAWNS;
+                action_selected = N_WHITE_ACTIONS;
+                for (i = 0; i < N_WHITE_ACTIONS; i++)
+                    possible_squares[i] = 0;
+                drawBoard(as.state, wpawn_texture, bpawn_texture, player_color, pawn_selected, action_selected, possible_squares); 
                 player_on_turn = true;
             }
         EndDrawing();
