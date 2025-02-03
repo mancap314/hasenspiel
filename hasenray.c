@@ -1,4 +1,6 @@
 #include "hasenray.h"
+#include "hasen_play.h"
+#include "hasen_utils.h"
 
 Vector2 pos2RectPos(uint8_t pos, Color_e player_color) {
     uint8_t row = N_ROWS - 1 - (pos / N_COLS);
@@ -47,7 +49,8 @@ void drawBoard(
     Color_e player_color,
     uint8_t pawn_selected,
     uint8_t action_selected,
-    uint8_t possible_squares[N_WHITE_ACTIONS]
+    uint8_t max_a,
+    uint8_t possible_squares[max_a]
 )
 {
     Color SquareColor;
@@ -80,9 +83,9 @@ void drawBoard(
             printf("%u, ", possible_squares[i]);
         printf("\n");
         // Put a small green circle in the possible squares
-        for (i = 0; i < N_WHITE_ACTIONS; i++) {
+        for (i = 0; i < max_a; i++) {
             if (possible_squares[i] < N_SQUARES) {
-                rectPos = pos2RectPos(GET_POSITION(state, possible_squares[i]), player_color);
+                rectPos = pos2RectPos(possible_squares[i], player_color);
                 DrawCircle(
                     rectPos.x + (float)SQUARE_SIZE / 2.0,
                     rectPos.y + (float)SQUARE_SIZE / 2.0,
@@ -94,13 +97,16 @@ void drawBoard(
     }
 }
 
+
 uint8_t clicked_move(
     const uint8_t possible_squares[N_WHITE_ACTIONS], 
-    const uint8_t pos
+    const uint8_t pos,
+    Color_e player_color
 ) 
 {
     uint8_t action_selected;
-    for (action_selected = 0; action_selected < N_MAX_MOVES; action_selected++) {
+    uint8_t max_a = (player_color == WHITE_C) ? N_WHITE_ACTIONS: N_BLACK_ACTIONS;
+    for (action_selected = 0; action_selected < max_a; action_selected++) {
         if (pos == possible_squares[action_selected])
             return action_selected;
     }
@@ -111,16 +117,28 @@ void handleBoardClick(
     const Vector2 *mousePosition, 
     const uint32_t state,
     const bool player_on_turn, 
-    const uint8_t possible_squares[N_WHITE_ACTIONS],
+    const uint8_t max_a,
+    const uint8_t possible_squares[max_a],
     const Color_e player_color,
     uint8_t *pawn_selected,
     uint8_t *action_selected
 ) {
+    printf("[DEBUG] handleBoardClick():\n"
+            "\t* player_on_turn: %s\n"
+            "\t* pawn_selected: %u\n"
+            "\t* action_selected: %u\n",
+            player_on_turn? "true": "false", *pawn_selected, *action_selected);
+    printf("[DEBUG] handleBoardClick(): possible_squares:\n");
+    for (uint8_t i = 0; i < N_WHITE_ACTIONS; i++)
+        printf("\t* action %u: %u\n", i + 1, possible_squares[i]);
+
     if (!player_on_turn)
         return;
     // Get square index corresponding to mouse position:
     const uint8_t pos = mousePos2Pos(mousePosition, player_color); 
-    if (pos >= N_PAWNS)
+    printf("[DEBUG] handleBoardClick(): pos=%u\n", pos);
+
+    if (pos >= N_SQUARES)
         return;
     for (uint8_t i = 0; i < N_PAWNS; i++) {
         if (player_color == WHITE_C  && i > 0)
@@ -132,10 +150,10 @@ void handleBoardClick(
             *action_selected = N_WHITE_ACTIONS;
             return;
         }
-        if (*pawn_selected < N_PAWNS) {
-            *action_selected = clicked_move(possible_squares, pos);
-            return;
-        }
+    }
+    if (*pawn_selected < N_PAWNS) {
+        *action_selected = clicked_move(possible_squares, pos, player_color);
+        return;
     }
     *pawn_selected = N_PAWNS;
     *action_selected = N_WHITE_ACTIONS;
@@ -143,29 +161,27 @@ void handleBoardClick(
 }
 
 void get_possible_squares(
-    ActionState as, 
+    ActionState *as, 
     const uint8_t pawn_selected, 
-    uint8_t possible_squares[N_WHITE_ACTIONS] 
+    const uint8_t max_a,
+    uint8_t possible_squares[max_a] 
 )        
 {
     if (pawn_selected >= N_PAWNS)
         return;
-    if (!(as.state & 1) && pawn_selected > 0) {
+    if ((as->state & 1) && pawn_selected > 0) {
         fprintf(stderr, "[ERROR] get_possible_squares(): white on turn but black pawn %u selected.\n", pawn_selected);
         return;
     }
-    if ((as.state & 1) && pawn_selected == 0) {
+    if (!(as->state & 1) && pawn_selected == 0) {
         fprintf(stderr, "[ERROR] get_possible_squares(): black on turn but white pawn 0 selected.\n");
         return;
     }
-    as.actions = hs_get_possible_actions(as.state);
-    uint8_t max_a = (as.state & 1) ? N_WHITE_ACTIONS : N_BLACK_ACTIONS;
-    if (!(as.state & 1)) {
-       as.actions <<= N_BLACK_ACTIONS * (pawn_selected - 1); 
-    }
+    as->actions = hs_get_possible_actions(as->state);
+    uint8_t shift = (as->state & 1) ? 0: N_BLACK_ACTIONS * (pawn_selected - 1);
     for (uint8_t a = 0; a < max_a; a++) {
-        if (as.actions & ACTION_MASK(a))
-            possible_squares[a] = GET_POSITION(as.state, pawn_selected) +  GET_ACTION(as.state, pawn_selected, a);
+        if ((as->actions >> shift) & ACTION_MASK(a))
+            possible_squares[a] = GET_POSITION(as->state, pawn_selected) +  GET_ACTION(as->state, pawn_selected, a);
         else 
             possible_squares[a] = N_SQUARES; 
     }
@@ -175,6 +191,7 @@ int main(void)
 {
     // Load estates
     // First find out how many lines in the file
+    char fpath[MAX_PATH] = "all_games.csv";
     FILE *f = fopen(fpath, "r");
     if (NULL == f) {
         perror("[ERROR] Could not open file at in read mode");
@@ -188,7 +205,7 @@ int main(void)
         return EXIT_FAILURE;
     }
     memset(estates, 0, n_estates * sizeof(estate_t));
-    ret = load_all_states(f, n_estates, estates);
+    int ret = load_all_states(f, n_estates, estates);
     if (ret != EXIT_SUCCESS) {
         fprintf(stderr, "[ERROR] Could not load states at %s.\n", fpath);
         return EXIT_FAILURE;
@@ -238,13 +255,14 @@ int main(void)
     float randomFloat;
     uint8_t i;
     float move_rand;
+    uint8_t max_a = (player_color == WHITE_C) ? N_WHITE_ACTIONS: N_BLACK_ACTIONS;
 
     while(!WindowShouldClose()) {
         Vector2 mousePosition = GetMousePosition();
         bool take_action = (player_on_turn && IsMouseButtonPressed(MOUSE_LEFT_BUTTON) && winner == NOCOLOR);
         BeginDrawing();
             ClearBackground(RAYWHITE);
-            drawBoard(as.state, wpawn_texture, bpawn_texture, player_color, pawn_selected, action_selected, possible_squares); 
+            drawBoard(as.state, wpawn_texture, bpawn_texture, player_color, pawn_selected, action_selected, max_a, possible_squares); 
             if (take_action) {
                 // if player clicked on the board:
                 if (mousePosition.x < 2 * N_COLS  * SQUARE_SIZE && 
@@ -253,28 +271,31 @@ int main(void)
                         &mousePosition, 
                         as.state, 
                         player_on_turn, 
+                        max_a,
                         possible_squares,
                         player_color,
                         &pawn_selected, 
                         &action_selected
                     );
                     if (pawn_selected < N_PAWNS) {
-                        if (action_selected >= N_WHITE_ACTIONS) {
+                        if (action_selected >= max_a) {
                             // Compute possible moves for the selected pawn
-                            get_possible_squares(as, pawn_selected, possible_squares);        
+                            get_possible_squares(&as, pawn_selected, max_a, possible_squares);        
                         } else {
-                            int ret = hs_perform_action(&as, action_selected);             
+                            uint8_t action_code = 1 << action_selected;
+                            if (pawn_selected > 0)
+                                action_code <<= (N_BLACK_ACTIONS * (pawn_selected - 1));
+                            int ret = hs_perform_action(&as, action_code);             
                             if (ret == EXIT_FAILURE) {
                                 fprintf(stderr, "[ERROR] Could not perform action");
                                 exit(EXIT_FAILURE);
                             }
                             pawn_selected = N_PAWNS;
+                            player_on_turn = false;
                         }
                     }
-                    drawBoard(as.state, wpawn_texture, bpawn_texture, player_color, pawn_selected, action_selected, possible_squares); 
+                    drawBoard(as.state, wpawn_texture, bpawn_texture, player_color, pawn_selected, action_selected, max_a, possible_squares); 
                     winner = GET_VICTORY(as.state, as.actions);
-                    if (winner == NOCOLOR)
-                        player_on_turn = false;
                 }
             }
             if ((!player_on_turn) && winner == NOCOLOR) {
@@ -295,8 +316,9 @@ int main(void)
                 pawn_selected = N_PAWNS;
                 action_selected = N_WHITE_ACTIONS;
                 for (i = 0; i < N_WHITE_ACTIONS; i++)
-                    possible_squares[i] = 0;
-                drawBoard(as.state, wpawn_texture, bpawn_texture, player_color, pawn_selected, action_selected, possible_squares); 
+                    possible_squares[i] = N_SQUARES;
+                drawBoard(as.state, wpawn_texture, bpawn_texture, player_color, pawn_selected, action_selected, max_a, possible_squares); 
+                winner = GET_VICTORY(as.state, as.actions);
                 player_on_turn = true;
             }
         EndDrawing();
