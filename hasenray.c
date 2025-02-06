@@ -28,15 +28,15 @@ uint8_t mousePos2Pos(
     uint8_t row = N_ROWS - 1 - (uint8_t)(mousePosition->y / SQUARE_SIZE); 
     // Check if it's black square or not
     if ((row % 2 && !(col % 2)) || (!(row % 2) && (col % 2)))
-        return N_PAWNS;
-    col /= 2;
-    if (!(row % 2))
-        col++;
+        return N_SQUARES;
+    
     if (player_color == WHITE_C) {
         row = N_ROWS - 1 - row;
         col = 2 * N_COLS - 1 - col;
     }
-    uint8_t pos = N_COLS * row + col - 1;  
+
+    col /= 2;
+    uint8_t pos = N_COLS * row + col; 
     printf("[DEBUG] mousePos2Pos(): row: %u, col: %u, pos: %u\n", row, col, pos);
     return pos;
 }
@@ -242,7 +242,7 @@ int main(void)
     ActionState as = {0};
     hs_init_actionstate(&as);
 
-    Color_e player_color = BLACK_C;
+    Color_e player_color = WHITE_C;
     bool player_on_turn = (player_color == WHITE_C) ? true: false;
     uint8_t pawn_selected = N_PAWNS;
     uint8_t action_selected = N_WHITE_ACTIONS;
