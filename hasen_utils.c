@@ -63,7 +63,7 @@ int hs_simulate_all_games(
             n_black_victories = 1E-27;
         records[state_ind].n_games = 1E-27;
         records[state_ind].n_black_victories = n_black_victories;
-        records[state_ind].can_force_victory = false;
+        records[state_ind].can_force_victory = (victory == BLACK_C); 
         return EXIT_SUCCESS;
     }
     uint8_t n_max_possible_actions = (as.state & 1) ? N_WHITE_ACTIONS: (N_PAWNS - 1) * N_BLACK_ACTIONS;
@@ -71,7 +71,7 @@ int hs_simulate_all_games(
     ActionState copied_as = {0};
     int ret;
     uint32_t next_state_ind = 0;
-    records[state_ind].can_force_victory = true;
+    records[state_ind].can_force_victory = (as.state & 1) ? true : false;
     for (uint8_t i = 0; i < n_max_possible_actions && (as.actions >> i); i++) {
         current_action = (1 << i);
         if (!(as.actions & current_action)) 
@@ -111,9 +111,11 @@ int hs_simulate_all_games(
         records[state_ind].n_black_victories += records[next_state_ind].n_black_victories;
         records[state_ind].n_games += records[next_state_ind].n_games;
         // If one of the next states can't force victory, then victory can be forced from this state
-        records[state_ind].can_force_victory &= records[next_state_ind].can_force_victory;
+        if (as.state & 1)
+            records[state_ind].can_force_victory &= records[next_state_ind].can_force_victory;
+        else
+            records[state_ind].can_force_victory |= records[next_state_ind].can_force_victory;
     }
-    records[state_ind].can_force_victory = !records[state_ind].can_force_victory;
     records[state_ind].is_computed = true;
     return EXIT_SUCCESS;
 }

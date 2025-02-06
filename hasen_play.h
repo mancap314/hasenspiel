@@ -12,7 +12,10 @@ typedef struct {
 
 
 int load_all_states(FILE *f, uint32_t n_estates, estate_t estates[n_estates]); 
+
 int comp_estates(const void *e1, const void *e2);
+
+void print_estate(estate_t *e);
 
 int find_estate(
     const uint32_t n_estates, 

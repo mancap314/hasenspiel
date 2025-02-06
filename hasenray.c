@@ -18,7 +18,6 @@ uint8_t mousePos2Pos(
     const Vector2 *mousePosition,
     const Color_e player_color
 ) {
-    printf("[DEBUG] mousePos2Pos(): mousePosition(%.2f, %.2f)\n", mousePosition->x, mousePosition->y);
     // Check is the mouse is on the board at all
     if (mousePosition->x > 2 * N_COLS * SQUARE_SIZE || 
             mousePosition->y > N_ROWS * SQUARE_SIZE)
@@ -37,7 +36,6 @@ uint8_t mousePos2Pos(
 
     col /= 2;
     uint8_t pos = N_COLS * row + col; 
-    printf("[DEBUG] mousePos2Pos(): row: %u, col: %u, pos: %u\n", row, col, pos);
     return pos;
 }
 
@@ -79,9 +77,6 @@ void drawBoard(
         rectPos = pos2RectPos(GET_POSITION(state, pawn_selected), player_color);
         Rectangle selectedRectangle = (Rectangle){rectPos.x, rectPos.y, SQUARE_SIZE, SQUARE_SIZE};
         DrawRectangleLinesEx(selectedRectangle, 3, GREEN);
-        for (i = 0; i < N_WHITE_ACTIONS; i++)
-            printf("%u, ", possible_squares[i]);
-        printf("\n");
         // Put a small green circle in the possible squares
         for (i = 0; i < max_a; i++) {
             if (possible_squares[i] < N_SQUARES) {
@@ -242,7 +237,7 @@ int main(void)
     ActionState as = {0};
     hs_init_actionstate(&as);
 
-    Color_e player_color = WHITE_C;
+    Color_e player_color = BLACK_C;
     bool player_on_turn = (player_color == WHITE_C) ? true: false;
     uint8_t pawn_selected = N_PAWNS;
     uint8_t action_selected = N_WHITE_ACTIONS;
@@ -299,7 +294,6 @@ int main(void)
                 }
             }
             if ((!player_on_turn) && winner == NOCOLOR) {
-                // TODO: perform computer move
                 ret = order_possible_moves(&as, n_estates, estates, next_estates, &n_possible_moves);
                 if (ret != EXIT_SUCCESS) {
                     fprintf(stderr, "[ERROR] Could not order moves.\n");
@@ -310,8 +304,11 @@ int main(void)
                     if (i == n_possible_moves - 1)
                         as.state = next_estates[i].state;
                     randomFloat = (float)rand() / RAND_MAX;
-                    if (randomFloat <= computer_strength)
+                    if (randomFloat <= computer_strength) {
+                        printf("[DEBUG] main(): move %u selected.\n", i);
                         as.state = next_estates[i].state;
+                        break;
+                    }
                 }
                 pawn_selected = N_PAWNS;
                 action_selected = N_WHITE_ACTIONS;

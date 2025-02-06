@@ -2,16 +2,29 @@
 
 int load_all_states(FILE *f, uint32_t n_estates, estate_t estates[n_estates]) {
     // f must have been open in read mode
-    for (uint32_t n_read = 0; fscanf(f, "%x,%f,%d\n", &estates[n_read].state, &estates[n_read].perc_victory, &estates[n_read].can_force_victory) != EOF && n_read < n_estates; n_read++)  {
+    uint8_t int_can_force = 0;
+    for (uint32_t n_read = 0; fscanf(f, "%x,%f,%d\n", &estates[n_read].state, &estates[n_read].perc_victory, &int_can_force) != EOF && n_read < n_estates; n_read++)  {
         if (errno != 0) {
             fprintf(stderr, "[ERROR] load_all_states(): Could not read state at line %u from file provided", n_read);
             perror("Error message");
             return EXIT_FAILURE;
         }
-        if (estates[n_read].state & 1)
+        estates[n_read].can_force_victory = (int_can_force == 1);
+        if (estates[n_read].state & 1) {
             estates[n_read].perc_victory = 100 - estates[n_read].perc_victory;
+            estates[n_read].can_force_victory = 1 - estates[n_read].can_force_victory; 
+        }
     }
     return EXIT_SUCCESS;
+}
+
+void print_estate(estate_t *e)
+{
+    printf("-state: ");
+    for (uint8_t i = 0; i < N_PAWNS; i++)
+        printf("%u%s", GET_POSITION(e->state, i), i == N_PAWNS - 1 ? "\n": ", ");
+    printf("- perc_victory: %.2f%%\n- can_force_victory: %s\n",
+           e->perc_victory, e->can_force_victory ? "True": "False");
 }
 
 int find_estate(
@@ -89,6 +102,12 @@ int order_possible_moves(
     }
     if (*n_moves > 1)
         qsort(next_estates, *n_moves, sizeof(estate_t), comp_estates);
+
+    printf("[DEBUG] order_possible_moves():\n");
+    for (uint8_t i = 0; i < *n_moves; i++) {
+        printf("move %u:\n", i);
+        print_estate(&next_estates[i]);
+    }
 
     return EXIT_SUCCESS;
 }

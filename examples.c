@@ -106,7 +106,7 @@ int main(int argc, char *argv[argc + 1]) {
         return EXIT_FAILURE;
     }
     // Each player on turn plays its best available move n_moves times
-    uint8_t n_moves = 10;
+    uint8_t n_moves = 0;
     uint8_t n_possible_moves = 0;
     estate_t next_estates[N_MAX_MOVES] = {0};
     for(uint16_t n_moves_played = 0; n_moves_played < n_moves; n_moves_played++) {
