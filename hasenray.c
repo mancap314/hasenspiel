@@ -300,13 +300,14 @@ int main(void)
                     return EXIT_FAILURE;
                 }
                 // Chose computer's move
+                uint8_t j;
                 for (i = 0; i < n_possible_moves; i++) {
+                    j = (player_color == BLACK_C) ? i: n_possible_moves - 1 - j;
                     if (i == n_possible_moves - 1)
-                        as.state = next_estates[i].state;
+                        as.state = next_estates[j].state;
                     randomFloat = (float)rand() / RAND_MAX;
                     if (randomFloat <= computer_strength) {
-                        printf("[DEBUG] main(): move %u selected.\n", i);
-                        as.state = next_estates[i].state;
+                        as.state = next_estates[j].state;
                         break;
                     }
                 }

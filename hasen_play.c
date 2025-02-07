@@ -103,12 +103,6 @@ int order_possible_moves(
     if (*n_moves > 1)
         qsort(next_estates, *n_moves, sizeof(estate_t), comp_estates);
 
-    printf("[DEBUG] order_possible_moves():\n");
-    for (uint8_t i = 0; i < *n_moves; i++) {
-        printf("move %u:\n", i);
-        print_estate(&next_estates[i]);
-    }
-
     return EXIT_SUCCESS;
 }
 
