@@ -1,9 +1,8 @@
 #ifndef HASEN_UTILS_H_
 #define HASEN_UTILS_H_
 
-#include <time.h>
 #include "hasen.h"
-
+#include <time.h>
 
 typedef struct {
     size_t n_moves;
@@ -41,7 +40,5 @@ int persist_records(
     Record records[n_records], 
     char filepath[MAX_PATH - 1]
 );
-
-uint32_t n_lines_in_file(FILE *f);
 
 #endif

@@ -132,26 +132,28 @@ int persist_records(
         return EXIT_FAILURE;
     }
     uint32_t n_states = 0, n_black_force = 0, n_white_force = 0;
+    fprintf(f, "#ifndef ALL_ESTATES_H_\n"
+            "#define ALL_ESTATES_H_\n\n"
+            "#include \"hasen_play.h\"\n\n"
+            "typedef struct {\n"
+            "\tuint32_t state;\n"
+            "\tfloat perc_victory;\n"
+            "\tbool can_force_victory;\n"
+            "} estate_t;\n\n" 
+            "estate_t ALL_ESTATES[] = {\n");
     for (uint32_t i = 0; i < n_records; i++) {
         if (records[i].n_games == 0) continue;  // nothing at i
-        fprintf(f, "%x,%.2f,%x\n", i + shift_pos, records[i].n_black_victories / records[i].n_games * 100, records[i].can_force_victory);
+        fprintf(f, "\t{%#x,%.2f,%x},\n", i + shift_pos, records[i].n_black_victories / records[i].n_games * 100, records[i].can_force_victory);
         n_states++;
         if (((i + shift_pos) & 1) && records[i].can_force_victory)
             n_white_force++;
         else if ((!((i + shift_pos) & 1)) && records[i].can_force_victory)
             n_black_force++;
     }
+    fprintf(f, "};\n\n#endif\n");
     fclose(f);
     printf("Stats:\n\t* %u states in total\n\t* %u states where black can force victory (%.2f%%)\n\t* %u states where white can force victory (%.2f%%)\n",
             n_states, n_black_force, (float)n_black_force / (float)n_states * 100.0, n_white_force, (float)n_white_force / (float)n_states * 100.0);
     return EXIT_SUCCESS;
-}
-
-uint32_t n_lines_in_file(FILE *f) {
-    uint32_t n_lines = 0;
-    while(!feof(f)) 
-        n_lines += (uint32_t)(fgetc(f) == '\n');
-    fseek(f, 0L, SEEK_SET);
-    return n_lines;
 }
 

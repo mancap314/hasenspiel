@@ -1,24 +1,5 @@
 #include "hasen_play.h"
 
-int load_all_states(FILE *f, uint32_t n_estates, estate_t estates[n_estates]) {
-    // f must have been open in read mode
-    uint8_t int_can_force = 0;
-    for (uint32_t n_read = 0; fscanf(f, "%x,%f,%d\n", &estates[n_read].state, &estates[n_read].perc_victory, &int_can_force) != EOF && n_read < n_estates; n_read++)  {
-        if (errno != 0) {
-            fprintf(stderr, "[ERROR] load_all_states(): Could not read state at line %u from file provided", n_read);
-            perror("Error message");
-            return EXIT_FAILURE;
-        }
-        estates[n_read].can_force_victory = (int_can_force == 1);
-        /*
-        if (estates[n_read].state & 1) {
-            estates[n_read].perc_victory = 100 - estates[n_read].perc_victory;
-            estates[n_read].can_force_victory = 1 - estates[n_read].can_force_victory; 
-        }
-        */
-    }
-    return EXIT_SUCCESS;
-}
 
 void print_estate(estate_t *e)
 {
@@ -30,16 +11,15 @@ void print_estate(estate_t *e)
 }
 
 int find_estate(
-    const uint32_t n_estates, 
-    const estate_t estates[n_estates],
     const uint32_t state, 
     estate_t *estate
 ) {
+    const uint32_t n_estates = (uint32_t)(sizeof(ALL_ESTATES) / sizeof(estate_t));
     uint32_t current_ind = n_estates / 2;
     uint32_t current_delta = n_estates / 2, previous_delta = 0;
     bool current_direction, previous_direction = true;
-    while (estates[current_ind].state != state) {
-        current_direction = (state < estates[current_ind].state);
+    while (ALL_ESTATES[current_ind].state != state) {
+        current_direction = (state < ALL_ESTATES[current_ind].state);
         if (previous_delta == 1 && current_delta == 1 && previous_direction != current_direction) {
             fprintf(stderr, "[ERROR] Could not find state %u in estates.\n", state);
             return EXIT_FAILURE;
@@ -52,8 +32,8 @@ int find_estate(
         previous_direction = current_direction;
     }
     estate->state = state;
-    estate->perc_victory = estates[current_ind].perc_victory;
-    estate->can_force_victory = estates[current_ind].can_force_victory;
+    estate->perc_victory = ALL_ESTATES[current_ind].perc_victory;
+    estate->can_force_victory = ALL_ESTATES[current_ind].can_force_victory;
     return EXIT_SUCCESS;
 }
 
@@ -79,8 +59,6 @@ int comp_estates(const void *e1, const void *e2) {
 
 int order_possible_moves(
     const ActionState *as, 
-    const uint32_t n_estates, 
-    const estate_t estates[n_estates],
     estate_t next_estates[N_MAX_MOVES], 
     uint8_t *n_moves
 ) {
@@ -97,7 +75,7 @@ int order_possible_moves(
             fprintf(stderr, "[ERROR] order_possible_moves(): Could not perform action %u on state %u.\n", action, copy_as.state);
             return EXIT_FAILURE;
         }
-        ret = find_estate(n_estates, estates, copy_as.state, &next_estates[(*n_moves)]);
+        ret = find_estate(copy_as.state, &next_estates[(*n_moves)]);
         if (ret != EXIT_SUCCESS) {
             fprintf(stderr, "[ERROR] order_possible_move(): finding estate for state %u failed.\n", copy_as.state);
             return EXIT_FAILURE;

@@ -1,4 +1,7 @@
+#include "hasen.h"
+#include "hasen_utils.h"
 #include "hasenray.h"
+#include "hasen_play.h"
 
 
 Vector2 pos2RectPos(uint8_t pos, Color_e player_color) 
@@ -174,28 +177,6 @@ void get_possible_squares(
 
 int main(void)
 {
-    // Load estates
-    // First find out how many lines in the file
-    char fpath[MAX_PATH] = "all_games.csv";
-    FILE *f = fopen(fpath, "r");
-    if (NULL == f) {
-        perror("[ERROR] Could not open file at in read mode");
-        return EXIT_FAILURE;
-    }
-    uint32_t n_estates = n_lines_in_file(f);
-
-    estate_t *estates = malloc(n_estates * sizeof(estate_t));
-    if (NULL == estates) {
-        perror("[ERROR] Failed to allocate estates");
-        return EXIT_FAILURE;
-    }
-    memset(estates, 0, n_estates * sizeof(estate_t));
-    int ret = load_all_states(f, n_estates, estates);
-    if (ret != EXIT_SUCCESS) {
-        fprintf(stderr, "[ERROR] Could not load states at %s.\n", fpath);
-        return EXIT_FAILURE;
-    }
-
     // Start with UI
     const int screenWidth = BOARD_WIDTH + PANEL_WIDTH;
     const int screenHeight = BOARD_HEIGHT; 
@@ -242,29 +223,46 @@ int main(void)
     float move_rand;
     uint8_t max_a = (player_color == WHITE_C) ? N_WHITE_ACTIONS: N_BLACK_ACTIONS;
     bool game_started = false;
-    bool take_action;
+    bool take_action = false;
     char info_text[100] = {0};
+    Vector2 mousePosition = {0, 0};
+    uint8_t action_code;
+    int ret;
+    char help_text[] = "Rules:\n- The pieces can move diagonally by\none square. Black only forward, white\nforward and backward.\n"
+        "- White must escape to the opposite\nside, black must encircle white.\n"
+        "- Before or during the game, you can\nmodify computer strength or\nswitch color.\n"
+        "- Have fun!";
+
+    char info_texts[][100]= {
+        "Press START NEW GAME\nto start the game",
+        "BLACK WON!\nPress START NEW GAME\nto start a new game",
+        "WHITE WON!\nPress START NEW GAME\nto start a new game",
+        "Game is running, good luck!",
+    };
+    uint8_t info_texts_ind = 0;
 
     while(!WindowShouldClose()) {
-        Vector2 mousePosition = GetMousePosition();
-        take_action = (game_started && player_on_turn && IsMouseButtonPressed(MOUSE_LEFT_BUTTON) && winner == NOCOLOR);
+        if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
+            mousePosition = GetMousePosition();
+            take_action = (game_started && player_on_turn && winner == NOCOLOR);
+        } else {
+            take_action = false;
+        }
         BeginDrawing();
-            //ClearBackground(RAYWHITE);
-            ClearBackground(GetColor(GuiGetStyle(DEFAULT, BACKGROUND_COLOR)));
+            ClearBackground(RAYWHITE);
 
             // Draw Panel Controls
-
             // Set `info_text`
-            as.actions = hs_get_possible_actions(as.state);
-            winner = GET_VICTORY(as.state, as.actions);
             if (!game_started)
-                sprintf(info_text, "%s", "Press START NEW GAME\nto start the game");
-            else if (winner != NOCOLOR) 
-                sprintf(info_text, "%s WON!\nPress START NEW GAME\nto start a new game", winner == WHITE_C ? "WHITE": "BLACK");
+                info_texts_ind = 0;
+            else if (winner == BLACK_C) 
+                info_texts_ind = 1;
+            else if (winner == WHITE_C) 
+                info_texts_ind = 2;
             else 
-                sprintf(info_text, "%s", "Game is running, good luck!");
+                info_texts_ind = 3;
 
-            GuiTextBox((Rectangle){BOARD_WIDTH + PANEL_WIDTH / 10, SQUARE_SIZE / 10, 8 * PANEL_WIDTH / 10, SQUARE_SIZE}, info_text, 45, false); 
+            GuiTextBox((Rectangle){BOARD_WIDTH + PANEL_WIDTH / 10, SQUARE_SIZE / 10, 8 * PANEL_WIDTH / 10, SQUARE_SIZE}, info_texts[info_texts_ind], 45, false); 
 
             if (GuiButton((Rectangle){BOARD_WIDTH + PANEL_WIDTH / 4, 7 * SQUARE_SIZE / 4, PANEL_WIDTH / 2, SQUARE_SIZE / 2}, "START NEW GAME")) {
                 game_started = true;
@@ -280,11 +278,6 @@ int main(void)
                 action_selected = N_WHITE_ACTIONS;
             }
             GuiSlider((Rectangle){BOARD_WIDTH + 12* PANEL_WIDTH / 50, 15 * SQUARE_SIZE / 4, 19 * PANEL_WIDTH / 30, SQUARE_SIZE / 3}, "Computer\nStrength", TextFormat("%.0f%%", computer_strength), &computer_strength, 0, 100);
-
-            char help_text[] = "Rules:\n- The pieces can move diagonally by\none square. Black only forward, white\nforward and backward.\n"
-                "- White must escape to the opposite\nside, black must encircle white.\n"
-                "- Before or during the game, you can\nmodify computer strength or\nswitch color.\n"
-                "- Have fun!";
 
             GuiTextBox((Rectangle){BOARD_WIDTH + PANEL_WIDTH / 20, 5 * SQUARE_SIZE, 18 * PANEL_WIDTH / 20, 5 * SQUARE_SIZE / 2}, help_text, 30, false); 
 
@@ -303,27 +296,26 @@ int main(void)
                         &action_selected
                     );
                     if (pawn_selected < N_PAWNS) {
-                        if (action_selected >= max_a) {
-                            // Compute possible moves for the selected pawn
-                            get_possible_squares(&as, pawn_selected, max_a, possible_squares);        
-                        } else {
-                            uint8_t action_code = 1 << action_selected;
+                        if (action_selected < max_a) {
+                            action_code = 1 << action_selected;
                             if (pawn_selected > 0)
                                 action_code <<= (N_BLACK_ACTIONS * (pawn_selected - 1));
-                            int ret = hs_perform_action(&as, action_code);             
+                            ret = hs_perform_action(&as, action_code);             
                             if (ret == EXIT_FAILURE) {
                                 fprintf(stderr, "[ERROR] Could not perform action");
                                 exit(EXIT_FAILURE);
                             }
                             pawn_selected = N_PAWNS;
                             player_on_turn = false;
-                        }
+                        } else 
+                            get_possible_squares(&as, pawn_selected, max_a, possible_squares);      
                     }
+                    winner = GET_VICTORY(as.state, as.actions);
                     drawBoard(as.state, wpawn_texture, bpawn_texture, player_color, pawn_selected, action_selected, max_a, possible_squares); 
                 }
             }
             if (game_started && (!player_on_turn) && winner == NOCOLOR) {
-                ret = order_possible_moves(&as, n_estates, estates, next_estates, &n_possible_moves);
+                ret = order_possible_moves(&as, next_estates, &n_possible_moves);
                 if (ret != EXIT_SUCCESS) {
                     fprintf(stderr, "[ERROR] Could not order moves.\n");
                     return EXIT_FAILURE;
@@ -332,7 +324,7 @@ int main(void)
                 for (i = 0; i < n_possible_moves; i++) {
                     if (i == n_possible_moves - 1)
                         as.state = next_estates[i].state;
-                    randomFloat = (float)rand() / RAND_MAX * 100;
+                    randomFloat = (float)rand() / (float)RAND_MAX * 100;
                     if (randomFloat <= computer_strength) {
                         as.state = next_estates[i].state;
                         break;
@@ -344,6 +336,8 @@ int main(void)
                     possible_squares[i] = N_SQUARES;
                 drawBoard(as.state, wpawn_texture, bpawn_texture, player_color, pawn_selected, action_selected, max_a, possible_squares); 
                 player_on_turn = true;
+                as.actions = hs_get_possible_actions(as.state);
+                winner = GET_VICTORY(as.state, as.actions);
             }
         EndDrawing();
     }
