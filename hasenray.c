@@ -258,34 +258,28 @@ int main(void)
             as.actions = hs_get_possible_actions(as.state);
             winner = GET_VICTORY(as.state, as.actions);
             if (!game_started)
-                sprintf(info_text, "%s", "Press START to start the game");
+                sprintf(info_text, "%s", "Press START NEW GAME\nto start the game");
             else if (winner != NOCOLOR) 
-                sprintf(info_text, "%s WON!\nPress START or RESET to\nstart a new game", winner == WHITE_C ? "WHITE": "BLACK");
+                sprintf(info_text, "%s WON!\nPress START NEW GAME\nto start a new game", winner == WHITE_C ? "WHITE": "BLACK");
             else 
                 sprintf(info_text, "%s", "Game is running, good luck!");
 
             GuiTextBox((Rectangle){BOARD_WIDTH + PANEL_WIDTH / 10, SQUARE_SIZE / 10, 8 * PANEL_WIDTH / 10, SQUARE_SIZE}, info_text, 45, false); 
 
-            if (GuiButton((Rectangle){BOARD_WIDTH + PANEL_WIDTH / 4, 3 * SQUARE_SIZE / 2, PANEL_WIDTH / 2, SQUARE_SIZE / 2}, "START")) {
+            if (GuiButton((Rectangle){BOARD_WIDTH + PANEL_WIDTH / 4, 7 * SQUARE_SIZE / 4, PANEL_WIDTH / 2, SQUARE_SIZE / 2}, "START NEW GAME")) {
                 game_started = true;
                 hs_init_actionstate(&as);
                 winner = NOCOLOR;
                 player_on_turn = (player_color == WHITE_C) ? true: false;
             }
-            if (GuiButton((Rectangle){BOARD_WIDTH + PANEL_WIDTH / 4, 9 * SQUARE_SIZE / 4, PANEL_WIDTH / 2, SQUARE_SIZE / 2}, "RESET")) {
-                game_started = true;
-                hs_init_actionstate(&as);
-                winner = NOCOLOR;
-                player_on_turn = (player_color == WHITE_C) ? true: false;
-            }
-            if (GuiButton((Rectangle){BOARD_WIDTH + PANEL_WIDTH / 4, 6 * SQUARE_SIZE / 2, PANEL_WIDTH / 2, SQUARE_SIZE / 2}, "SWITCH COLOR")) {
+            if (GuiButton((Rectangle){BOARD_WIDTH + PANEL_WIDTH / 4, 10 * SQUARE_SIZE / 4, PANEL_WIDTH / 2, SQUARE_SIZE / 2}, "SWITCH COLOR")) {
                 player_color = (player_color == BLACK_C) ? WHITE_C: BLACK_C;
                 max_a = (player_color == WHITE_C) ? N_WHITE_ACTIONS: N_BLACK_ACTIONS;
                 player_on_turn = ((as.state & 1) && player_color == WHITE_C) || (!(as.state & 1) && player_color == BLACK_C);
                 take_action = player_on_turn;
                 action_selected = N_WHITE_ACTIONS;
             }
-            GuiSlider((Rectangle){BOARD_WIDTH + PANEL_WIDTH / 3, 8 * SQUARE_SIZE / 2, PANEL_WIDTH / 2, SQUARE_SIZE / 3}, "Computer\nStrength", TextFormat("%.0f%%", computer_strength), &computer_strength, 0, 100);
+            GuiSlider((Rectangle){BOARD_WIDTH + 12* PANEL_WIDTH / 50, 15 * SQUARE_SIZE / 4, 19 * PANEL_WIDTH / 30, SQUARE_SIZE / 3}, "Computer\nStrength", TextFormat("%.0f%%", computer_strength), &computer_strength, 0, 100);
 
             char help_text[] = "Rules:\n- The pieces can move diagonally by\none square. Black only forward, white\nforward and backward.\n"
                 "- White must escape to the opposite\nside, black must encircle white.\n"
