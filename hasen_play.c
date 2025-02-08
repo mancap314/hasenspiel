@@ -10,10 +10,12 @@ int load_all_states(FILE *f, uint32_t n_estates, estate_t estates[n_estates]) {
             return EXIT_FAILURE;
         }
         estates[n_read].can_force_victory = (int_can_force == 1);
+        /*
         if (estates[n_read].state & 1) {
             estates[n_read].perc_victory = 100 - estates[n_read].perc_victory;
             estates[n_read].can_force_victory = 1 - estates[n_read].can_force_victory; 
         }
+        */
     }
     return EXIT_SUCCESS;
 }
@@ -58,15 +60,21 @@ int find_estate(
 int comp_estates(const void *e1, const void *e2) {
     estate_t *es1 = (estate_t *)e1;
     estate_t *es2 = (estate_t *)e2;
+
+    bool white_playing = !(es1->state & 1);
+    int ret = 0;
     if (es1->can_force_victory && !es2->can_force_victory) 
-        return 1;
-    if (!es1->can_force_victory && es2->can_force_victory) 
-        return -1;
-    if (es1->perc_victory > es2->perc_victory)
-        return 1;
-    if (es1->perc_victory < es2->perc_victory)
-        return -1;
-    return 0;
+        ret = -2;
+    else if (!es1->can_force_victory && es2->can_force_victory) 
+        ret = 2;
+    else if (es1->perc_victory > es2->perc_victory)
+        ret = 1;
+    else if (es1->perc_victory < es2->perc_victory)
+        ret = -1;
+    if (ret && white_playing && (ret == 2 || ret == -2))
+        ret *= -1;
+
+    return ret;
 }
 
 int order_possible_moves(
