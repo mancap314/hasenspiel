@@ -52,6 +52,9 @@ int comp_estates(const void *e1, const void *e2) {
     else if (es1->perc_victory < es2->perc_victory)
         ret = 1;
 
+    if (!(es1->state & 1) &&(ret == 1 || ret == -1))  // white is on turn
+        ret = -ret;
+
     return ret;
 }
 
