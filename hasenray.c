@@ -175,6 +175,7 @@ void get_possible_squares(
     }
 }
 
+
 int main(void)
 {
     // Start with UI

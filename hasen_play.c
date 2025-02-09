@@ -44,15 +44,13 @@ int comp_estates(const void *e1, const void *e2) {
     bool white_playing = !(es1->state & 1);
     int ret = 0;
     if (es1->can_force_victory && !es2->can_force_victory) 
-        ret = -2;
-    else if (!es1->can_force_victory && es2->can_force_victory) 
-        ret = 2;
-    else if (es1->perc_victory > es2->perc_victory)
-        ret = 1;
-    else if (es1->perc_victory < es2->perc_victory)
         ret = -1;
-    if (ret && white_playing && (ret == 2 || ret == -2))
-        ret *= -1;
+    else if (!es1->can_force_victory && es2->can_force_victory) 
+        ret = 1;
+    else if (es1->perc_victory > es2->perc_victory)
+        ret = -1;
+    else if (es1->perc_victory < es2->perc_victory)
+        ret = 1;
 
     return ret;
 }
