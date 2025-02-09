@@ -320,8 +320,8 @@ void updateDrawFrame(
 #if defined(PLATFORM_WEB)
 void main_loop(void* arg_) 
 {
-    hasenray_state_t *hs = (hasenray_state_t)arg_;
-    updateDrawFrame(&hs);
+    hasenray_state_t *hs = (hasenray_state_t *)arg_;
+    updateDrawFrame(hs);
 }
 #endif
 
