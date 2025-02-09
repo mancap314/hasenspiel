@@ -4,7 +4,7 @@ ifeq ($(OS),Windows_NT)
 	EXT = exe
 	RM = del
 	BASE_PATH = C:\Users\manue\Documents\code
-	RAYFLAGS = -I"$(BASE_PATH)\raylib\src" -I"$(BASE_PATH)\raygui\src" "$(RAYLIB_PATH)\src\libraylib.a" -lopengl32 -lgdi32 -lwinmm
+	RAYFLAGS = -I"$(BASE_PATH)\raylib\src" -I"$(BASE_PATH)\raygui\src" "$(BASE_PATH)\raylib\src\libraylib.a" -lopengl32 -lgdi32 -lwinmm
 else 
 	EXT = o
 	RM = rm
