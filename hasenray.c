@@ -3,6 +3,11 @@
 #include "hasenray.h"
 #include "hasen_play.h"
 
+#if defined(PLATFORM_WEB)
+    #include <emscripten/emscripten.h>
+#endif
+
+
 char help_text[] = "Rules:\n- The pieces can move diagonally by\none square. Black only forward, white\nforward and backward.\n"
         "- White must escape to the opposite\nside, black must encircle white.\n"
         "- Before or during the game, you can\nmodify computer strength or\nswitch color.\n"
