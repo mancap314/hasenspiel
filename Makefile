@@ -31,7 +31,7 @@ hasenrayweb: all_estates.c hasenray.c hasen_play.c hasen_utils.c hasen.c
 		-I. -I $(BASE_PATH)/raylib/src -I $(BASE_PATH)/raylib/src/external -I $(BASE_PATH)/raygui/src \
 		-L. -L $(BASE_PATH)/raylib/src -L $(BASE_PATH)/raygui/src \
 		-s USE_GLFW=3 -s ASYNCIFY -s TOTAL_STACK=16MB -s TOTAL_MEMORY=32MB -s ALLOW_MEMORY_GROWTH=1 -s FORCE_FILESYSTEM=1 \
-		--shell-file $(BASE_PATH)/raylib/src/shell.html $(BASE_PATH)/raylib/src/web/libraylib.web.a \
+		--shell-file $(BASE_PATH)/raylib/src/minshell.html $(BASE_PATH)/raylib/src/web/libraylib.web.a \
 		--preload-file resources \
 		-DPLATFORM_WEB \
 		-Os

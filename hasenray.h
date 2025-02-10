@@ -12,7 +12,6 @@
 #define SPRITE_SIZE     (60)
 #define BOARD_WIDTH     (SQUARE_SIZE * N_COLS * 2)
 #define BOARD_HEIGHT    (SQUARE_SIZE * N_ROWS)
-#define PANEL_WIDTH     (SQUARE_SIZE * N_COLS)
 #define MAX_INFO_TEXT   (100)
 
 typedef struct {

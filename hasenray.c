@@ -8,9 +8,9 @@
 #endif
 
 
-char help_text[] = "Rules:\n- The pieces can move diagonally by\none square. Black only forward, white\nforward and backward.\n"
-        "- White must escape to the opposite\nside, black must encircle white.\n"
-        "- Before or during the game, you can\nmodify computer strength or\nswitch color.\n"
+char help_text[] = "Rules:\n"
+        "- Goal: Black must encircle white. White must break through black pawns.\n"
+        "- Moves: Pieces can move diagonally by one square. Black only forward, white forward\nand backward.\n"
         "- Have fun!";
 
 char info_texts[][MAX_INFO_TEXT] = {
@@ -225,24 +225,24 @@ void updateDrawFrame(
         else 
             info_texts_ind = 3;
 
-        GuiTextBox((Rectangle){BOARD_WIDTH + PANEL_WIDTH / 10, SQUARE_SIZE / 10, 8 * PANEL_WIDTH / 10, SQUARE_SIZE}, info_texts[info_texts_ind], 45, false); 
+        GuiTextBox((Rectangle){SQUARE_SIZE / 10, BOARD_HEIGHT + SQUARE_SIZE / 2, 2 * BOARD_WIDTH / 5, SQUARE_SIZE}, info_texts[info_texts_ind], 45, false);
 
-        if (GuiButton((Rectangle){BOARD_WIDTH + PANEL_WIDTH / 4, 7 * SQUARE_SIZE / 4, PANEL_WIDTH / 2, SQUARE_SIZE / 2}, "START NEW GAME")) {
+        if (GuiButton((Rectangle){BOARD_WIDTH / 2 - SQUARE_SIZE / 3, BOARD_HEIGHT + SQUARE_SIZE / 2, 2 * SQUARE_SIZE, SQUARE_SIZE}, "START NEW GAME")) {
             hs->game_started = true;
             hs_init_actionstate(&hs->as);
             hs->winner = NOCOLOR;
             hs->player_on_turn = (hs->player_color == WHITE_C) ? true: false;
         }
-        if (GuiButton((Rectangle){BOARD_WIDTH + PANEL_WIDTH / 4, 10 * SQUARE_SIZE / 4, PANEL_WIDTH / 2, SQUARE_SIZE / 2}, "SWITCH COLOR")) {
+         if (GuiButton((Rectangle){BOARD_WIDTH / 2 + 15 * SQUARE_SIZE / 8,  BOARD_HEIGHT + SQUARE_SIZE / 2, 2 * SQUARE_SIZE, SQUARE_SIZE}, "SWITCH COLOR")) {
             hs->player_color = (hs->player_color == BLACK_C) ? WHITE_C: BLACK_C;
-            hs->max_a = (hs->player_color == WHITE_C) ? N_WHITE_ACTIONS: N_BLACK_ACTIONS;
+           hs->max_a = (hs->player_color == WHITE_C) ? N_WHITE_ACTIONS: N_BLACK_ACTIONS;
             hs->player_on_turn = ((hs->as.state & 1) && hs->player_color == WHITE_C) || (!(hs->as.state & 1) && hs->player_color == BLACK_C);
             take_action = hs->player_on_turn;
             hs->action_selected = N_WHITE_ACTIONS;
         }
-        GuiSlider((Rectangle){BOARD_WIDTH + 12* PANEL_WIDTH / 50, 15 * SQUARE_SIZE / 4, 19 * PANEL_WIDTH / 30, SQUARE_SIZE / 3}, "Computer\nStrength", TextFormat("%.0f%%", hs->computer_strength), &hs->computer_strength, 0, 100);
+        GuiSlider((Rectangle){SQUARE_SIZE, BOARD_HEIGHT + 2 * SQUARE_SIZE, BOARD_WIDTH - 3 * SQUARE_SIZE / 2, SQUARE_SIZE / 3}, "Computer\nStrength", TextFormat("%.0f%%", hs->computer_strength), &hs->computer_strength, 0, 100);
 
-        GuiTextBox((Rectangle){BOARD_WIDTH + PANEL_WIDTH / 20, 5 * SQUARE_SIZE, 18 * PANEL_WIDTH / 20, 5 * SQUARE_SIZE / 2}, help_text, 30, false); 
+        GuiTextBox((Rectangle){SQUARE_SIZE / 10, BOARD_HEIGHT + 13 * SQUARE_SIZE / 4, BOARD_WIDTH - SQUARE_SIZE / 5, 3 * SQUARE_SIZE / 2}, help_text, 30, false); 
 
         drawBoard(hs->as.state, &hs->wpawn_texture, &hs->bpawn_texture, hs->player_color, hs->pawn_selected, hs->action_selected, hs->max_a, hs->possible_squares); 
         if (take_action) {
@@ -333,8 +333,8 @@ void main_loop(void* arg_)
 int main(void)
 {
     // Start with UI
-    const int screenWidth = BOARD_WIDTH + PANEL_WIDTH;
-    const int screenHeight = BOARD_HEIGHT; 
+    const int screenWidth = BOARD_WIDTH;
+    const int screenHeight = BOARD_HEIGHT + 10 * SQUARE_SIZE / 2; 
 
     InitWindow(screenWidth, screenHeight, "Hasenspiel");
 

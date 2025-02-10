@@ -8,6 +8,8 @@ on a black square of the last row. White starts.
 - Others: White and Black play alternatively. No piece can be taken, no piece can jump over another piece.
 - Have fun
 
+You can play it online [here](https://mancap314.itch.io/hasenspiel).
+
 See [blog article](https://mancap314.github.io/hasenspiel.html) for more
 in-depth explainations about how this game is solved.
 
