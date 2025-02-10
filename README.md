@@ -12,8 +12,10 @@ See [blog article](https://mancap314.github.io/hasenspiel.html) for more
 in-depth explainations about how this game is solved.
 
 ## Code
-`make examples` to create the executable. The code in [examples.c](examples.c) shows how to generate an arbitrary number of random games, and how to explore iteratively all states downstream, starting from a given state.
+- `make generate_all_estates` to create the executable that will compute all the possible games and store them in the corresponding `.h` and `.c` files. The code in [generate_all_estates.c](generate_all_estates.c) shows how to generate an arbitrary number of random games, and how to explore iteratively all states downstream, starting from a given state.
+- `make hasenray` to generate and start desktop version of the game
+- `make hasenrayweb` to generate the web version of the game compile to [web assembly](https://webassembly.org/) with [emsdk](https://github.com/emscripten-core/emsdk) (that you must install before). Notice: you must first create a `web` folder, where the resulting files will land.
 
 ## Misc
 - Probably a good toy game to explore Reinforcement Learning for MDPs (Markov Decision Processes)
-- Gamified UI using Raylib maybe coming in the future
+- ~Gamified UI using Raylib maybe coming in the future~ [Update: done]

@@ -1,6 +1,5 @@
 #include <string.h>
 #include "hasen_utils.h"
-#include "hasen_play.h"
 
 void simulate_random_games(uint16_t n_games) {
     uint32_t n_games_simulated = 0;
@@ -75,7 +74,7 @@ int main(int argc, char *argv[argc + 1]) {
             records[start_ind].n_black_victories, 
             records[start_ind].n_black_victories / records[start_ind].n_games * 100.0, 
             records[start_ind].can_force_victory ? "yes": "no (opponent can force victory)");
-    char fpath[MAX_PATH] = "all_estates.h";
+    char fpath[MAX_PATH - 3] = "all_estates";
     ret = persist_records(shift_pos, max_n_states, records, fpath);
     if (ret != EXIT_SUCCESS) {
         fprintf(stderr, "[ERROR] Could not persist all games at %s\n", fpath);

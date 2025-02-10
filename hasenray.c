@@ -352,7 +352,7 @@ int main(void)
     hs.n_possible_moves = 0;
     hs.winner = NOCOLOR;
     hs.computer_strength = 100.0f;  // must be between 0 and 100 (included)
-    hs.game_started = false;
+    hs.game_started = true;
     hs.max_a = (hs.player_color == WHITE_C) ? N_WHITE_ACTIONS: N_BLACK_ACTIONS;
 
     // Resource loading 

@@ -124,33 +124,53 @@ int persist_records(
     uint32_t shift_pos, 
     uint32_t n_records, 
     Record records[n_records], 
-    char filepath[MAX_PATH - 1]
+    char filepath[MAX_PATH - 3]
 ) {
-    FILE *f = fopen(filepath, "w");
-    if (NULL == f) {
-        fprintf(stderr, "[ERROR] persist_records(): Could not open file at %s.\n", filepath);
-        return EXIT_FAILURE;
-    }
     uint32_t n_states = 0, n_black_force = 0, n_white_force = 0;
-    fprintf(f, "#ifndef ALL_ESTATES_H_\n"
-            "#define ALL_ESTATES_H_\n\n"
-            "#include \"hasen_play.h\"\n\n"
-            "typedef struct {\n"
-            "\tuint32_t state;\n"
-            "\tfloat perc_victory;\n"
-            "\tbool can_force_victory;\n"
-            "} estate_t;\n\n" 
-            "estate_t ALL_ESTATES[] = {\n");
+    // iterate once to find out n_states
     for (uint32_t i = 0; i < n_records; i++) {
         if (records[i].n_games == 0) continue;  // nothing at i
-        fprintf(f, "\t{%#x,%.2f,%x},\n", i + shift_pos, records[i].n_black_victories / records[i].n_games * 100, records[i].can_force_victory);
         n_states++;
         if (((i + shift_pos) & 1) && records[i].can_force_victory)
             n_white_force++;
         else if ((!((i + shift_pos) & 1)) && records[i].can_force_victory)
             n_black_force++;
     }
-    fprintf(f, "};\n\n#endif\n");
+    char current_filepath[MAX_PATH -1] = {0};
+    sprintf(current_filepath, "%s%s", filepath, ".h");
+    FILE *f = fopen(current_filepath, "w");
+    if (NULL == f) {
+        fprintf(stderr, "[ERROR] persist_records(): Could not open file at %s.\n", current_filepath);
+        return EXIT_FAILURE;
+    }
+    
+    fprintf(f, "#ifndef ALL_ESTATES_H_\n"
+            "#define ALL_ESTATES_H_\n\n"
+            "#include <stdint.h>\n"
+            "#include <stdbool.h>\n\n"
+            "typedef struct {\n"
+            "\tuint32_t state;\n"
+            "\tfloat perc_victory;\n"
+            "\tbool can_force_victory;\n"
+            "} estate_t;\n\n"  
+            "extern const estate_t ALL_ESTATES[%u];\n\n" 
+            "#endif\n", n_states);
+    fclose(f);
+
+    sprintf(current_filepath, "%s%s", filepath, ".c");
+    f = fopen(current_filepath, "w");
+    if (NULL == f) {
+        fprintf(stderr, "[ERROR] persist_records(): Could not open file at %s.\n", current_filepath);
+        return EXIT_FAILURE;
+    }
+    fprintf(f, "#include \"all_estates.h\"\n\n"
+            "const estate_t ALL_ESTATES[%u] = {\n",
+            n_states);
+    for (uint32_t i = 0; i < n_records; i++) {
+        if (records[i].n_games == 0) continue;  // nothing at i
+        fprintf(f, "\t{%#x,%.2f,%x},\n", i + shift_pos, records[i].n_black_victories / records[i].n_games * 100, records[i].can_force_victory);
+    }
+    fprintf(f, "};\n");
     fclose(f);
     printf("Stats:\n\t* %u states in total\n\t* %u states where black can force victory (%.2f%%)\n\t* %u states where white can force victory (%.2f%%)\n",
             n_states, n_black_force, (float)n_black_force / (float)n_states * 100.0, n_white_force, (float)n_white_force / (float)n_states * 100.0);
