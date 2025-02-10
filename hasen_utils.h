@@ -38,7 +38,7 @@ int persist_records(
     uint32_t shift_pos, 
     uint32_t n_records, 
     Record records[n_records], 
-    char filepath[MAX_PATH - 1]
+    char filepath[MAX_PATH - 3]
 );
 
 #endif

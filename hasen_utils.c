@@ -168,7 +168,7 @@ int persist_records(
             n_states);
     for (uint32_t i = 0; i < n_records; i++) {
         if (records[i].n_games == 0) continue;  // nothing at i
-        fprintf(f, "\t{%#x,%.2f,%x},\n", i + shift_pos, records[i].n_black_victories / records[i].n_games * 100, records[i].can_force_victory);
+        fprintf(f, "\t{%#x,%f,%x},\n", i + shift_pos, records[i].n_black_victories / records[i].n_games * 100, records[i].can_force_victory);
     }
     fprintf(f, "};\n");
     fclose(f);

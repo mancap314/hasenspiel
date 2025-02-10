@@ -5,11 +5,11 @@
 #include <stdbool.h>
 
 typedef struct {
-    uint32_t state;
-    float perc_victory;
-    bool can_force_victory;
-} estate_t;  // enhanced state
+	uint32_t state;
+	float perc_victory;
+	bool can_force_victory;
+} estate_t;
 
-extern const estate_t ALL_ESTATES[776283]; 
+extern const estate_t ALL_ESTATES[776283];
 
 #endif

@@ -18,7 +18,7 @@ hasen_test: hasen_test.c hasen.c
 	$(CC) -o $@.$(EXT) $^ $(CFLAGS)
 	./$@.$(EXT)
 
-generate_all_estates: examples.c hasen_utils.c hasen.c
+generate_all_estates: generate_all_estates.c hasen_utils.c hasen.c
 	$(CC) -o $@.$(EXT) $^ $(CFLAGS)
 	# ./$@.$(EXT)
 

@@ -48,13 +48,13 @@ int comp_estates(const void *e1, const void *e2) {
     else if (!es1->can_force_victory && es2->can_force_victory) 
         ret = 1;
     else if (es1->perc_victory > es2->perc_victory)
-        ret = -1;
-    else if (es1->perc_victory < es2->perc_victory)
         ret = 1;
+    else if (es1->perc_victory < es2->perc_victory)
+        ret = -1;
     else 
         ret = ((float)rand() / (float)(RAND_MAX)) > 0.5 ? 1: -1;
 
-    if (!(es1->state & 1) &&(ret == 1 || ret == -1))  // white is on turn
+    if (!(es1->state & 1) && (ret == 1 || ret == -1))  // white is on turn
         ret = -ret;
 
     return ret;
