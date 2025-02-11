@@ -14,9 +14,9 @@ char help_text[] = "Rules:\n"
         "- Have fun!";
 
 char info_texts[][MAX_INFO_TEXT] = {
-    "BLACK WON",
-    "WHITE WON!",
-    "Game running...",
+    "BLACK WON !!!",
+    "WHITE WON !!!",
+    "GAME RUNNING...",
 };
 
 
@@ -204,11 +204,31 @@ void updateDrawFrame(
     int ret;
     uint8_t i;
 
+    Rectangle backwardRectangle = { SQUARE_SIZE / 4, BANNER_HEIGHT + BOARD_HEIGHT + SQUARE_SIZE / 4, SQUARE_SIZE, SQUARE_SIZE};
+    Rectangle forwardRectangle = { backwardRectangle.x  + 3 * SQUARE_SIZE / 2, backwardRectangle.y, backwardRectangle.width, backwardRectangle.height};
+
     BeginDrawing();
         ClearBackground(RAYWHITE);
 
         if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
             mousePosition = GetMousePosition();
+
+            bool goBackward = CheckCollisionPointRec(mousePosition, backwardRectangle);
+            if (goBackward && (hs->current_history_ind >= 2)) {
+                hs->current_history_ind -= 2;
+                hs->as.state = hs->history[hs->current_history_ind];
+                hs->as.actions = hs_get_possible_actions(hs->as.state);
+                hs->winner = GET_VICTORY(hs->as.state, hs->as.actions);
+            }
+
+            bool goForward = CheckCollisionPointRec(mousePosition, forwardRectangle);
+            if (goForward && (hs->current_history_ind + 2 < hs->max_history_ind)) {
+                hs->current_history_ind += 2;
+                hs->as.state = hs->history[hs->current_history_ind];
+                hs->as.actions = hs_get_possible_actions(hs->as.state);
+                hs->winner = GET_VICTORY(hs->as.state, hs->as.actions);
+            }
+
             take_action = (hs->game_started && hs->player_on_turn && hs->winner == NOCOLOR);
         } else {
             take_action = false;
@@ -224,7 +244,13 @@ void updateDrawFrame(
             info_texts_ind = 2;
 
         DrawText("HASENSPIEL", BOARD_WIDTH / 2 - 6 * SQUARE_SIZE / 4, BANNER_HEIGHT / 10, SQUARE_SIZE / 2, BLACK);
-        DrawText(info_texts[info_texts_ind], BOARD_WIDTH / 2 - 3 * SQUARE_SIZE / 4, 2 * BANNER_HEIGHT / 3, SQUARE_SIZE / 4, BLACK);
+        DrawText(info_texts[info_texts_ind], BOARD_WIDTH / 2 - SQUARE_SIZE, 2 * BANNER_HEIGHT / 3, SQUARE_SIZE / 4, BLACK);
+
+        GuiDrawIcon(114, backwardRectangle.x - ICON_PIXEL_SIZE, backwardRectangle.y -ICON_PIXEL_SIZE , ICON_PIXEL_SIZE, BLACK);
+        DrawRectangleLinesEx(backwardRectangle, 2, BLACK);
+
+        GuiDrawIcon(115, forwardRectangle.x, forwardRectangle.y - ICON_PIXEL_SIZE, ICON_PIXEL_SIZE, BLACK);
+        DrawRectangleLinesEx(forwardRectangle, 2, BLACK);
 
         if (GuiButton(
                 (Rectangle){
@@ -237,6 +263,10 @@ void updateDrawFrame(
             hs_init_actionstate(&hs->as);
             hs->winner = NOCOLOR;
             hs->player_on_turn = (hs->player_color == WHITE_C) ? true: false;
+            for (i = 0; i < HISTORY_SIZE; i++)
+                hs->history[i] = (i == 0) ? hs->as.state : 0;
+            hs->current_history_ind = 0;
+            hs->max_history_ind = 0;
         }
          if (GuiButton(
                 (Rectangle){
@@ -268,6 +298,7 @@ void updateDrawFrame(
             }, help_text, 30, false); 
 
         drawBoard(hs->as.state, &hs->wpawn_texture, &hs->bpawn_texture, hs->player_color, hs->pawn_selected, hs->action_selected, hs->max_a, hs->possible_squares); 
+
         if (take_action) {
             // if player clicked on the board:
             if (mousePosition.x < BOARD_WIDTH && 
@@ -284,7 +315,7 @@ void updateDrawFrame(
                     &hs->action_selected
                 );
                 if (hs->pawn_selected < N_PAWNS) {
-                    if (hs->action_selected < hs->max_a) {
+                    if (hs->action_selected < hs->max_a) {  // perform user action
                         action_code = 1 << hs->action_selected;
                         if (hs->pawn_selected > 0)
                             action_code <<= (N_BLACK_ACTIONS * (hs->pawn_selected - 1));
@@ -295,6 +326,10 @@ void updateDrawFrame(
                         }
                         hs->pawn_selected = N_PAWNS;
                         hs->player_on_turn = false;
+                        // Update history
+                        hs->current_history_ind++;
+                        hs->max_history_ind = hs->current_history_ind;
+                        hs->history[hs->current_history_ind] = hs->as.state;
                     } else 
                         get_possible_squares(&hs->as, hs->pawn_selected, hs->max_a, hs->possible_squares);      
                 }
@@ -329,7 +364,11 @@ void updateDrawFrame(
             hs->pawn_selected = N_PAWNS;
             hs->action_selected = N_WHITE_ACTIONS;
             for (i = 0; i < N_WHITE_ACTIONS; i++)
-                hs->possible_squares[i] = N_SQUARES;
+                   hs->possible_squares[i] = N_SQUARES;
+
+            hs->current_history_ind++;
+            hs->max_history_ind++;
+            hs->history[hs->current_history_ind] = hs->as.state;
             
             drawBoard(
                 hs->as.state, 
@@ -340,6 +379,7 @@ void updateDrawFrame(
                 hs->action_selected, 
                 hs->max_a, 
                 hs->possible_squares); 
+
             hs->player_on_turn = true;
             hs->as.actions = hs_get_possible_actions(hs->as.state);
             hs->winner = GET_VICTORY(hs->as.state, hs->as.actions);
@@ -379,6 +419,10 @@ int main(void)
     hs.computer_strength = 100.0f;  // must be between 0 and 100 (included)
     hs.game_started = true;
     hs.max_a = (hs.player_color == WHITE_C) ? N_WHITE_ACTIONS: N_BLACK_ACTIONS;
+    for (i = 0; i < HISTORY_SIZE; i++)
+        hs.history[i] = (i == 0) ? hs.as.state : 0;
+    hs.current_history_ind = 0;
+    hs.max_history_ind = 0;
 
     // Resource loading 
     const char wp_path[] = "resources/whitepawn.png";
@@ -390,6 +434,7 @@ int main(void)
         CloseWindow();
         exit(1);
     }
+
     const char bp_path[] = "resources/blackpawn.png";
     if (FileExists(bp_path)) {
         Image bpawn_image = LoadImage(bp_path);
@@ -399,6 +444,15 @@ int main(void)
         CloseWindow();
         exit(1);
     }
+
+    const char icons_path[] = "resources/icons.rgi";
+    if (!FileExists(icons_path)) {
+        fprintf(stderr, "[ERROR] icons path does not exist at '%s'.\n", icons_path);
+        CloseWindow();
+        exit(1);
+    }
+
+    GuiLoadIcons(icons_path, true);
     // Initialization of hs finished
 
     srand((unsigned int)time(NULL));

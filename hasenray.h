@@ -14,6 +14,8 @@
 #define BOARD_HEIGHT    (SQUARE_SIZE * N_ROWS)
 #define BANNER_HEIGHT   (5 * SQUARE_SIZE / 4)
 #define MAX_INFO_TEXT   (100)
+#define ICON_PIXEL_SIZE (4)
+#define HISTORY_SIZE    (100)
 
 typedef struct {
     bool game_started;
@@ -30,6 +32,9 @@ typedef struct {
     estate_t next_estates[N_MAX_MOVES];
     uint8_t n_possible_moves;
     uint8_t max_a;
+    uint32_t history[HISTORY_SIZE];
+    uint8_t current_history_ind;
+    uint8_t max_history_ind;
 } hasenray_state_t;
 
 Vector2 pos2RectPos(uint8_t pos, Color_e player_color);
