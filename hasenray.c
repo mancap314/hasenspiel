@@ -14,10 +14,9 @@ char help_text[] = "Rules:\n"
         "- Have fun!";
 
 char info_texts[][MAX_INFO_TEXT] = {
-    "Press START NEW GAME\nto start the game",
-    "BLACK WON!\nPress START NEW GAME\nto start a new game",
-    "WHITE WON!\nPress START NEW GAME\nto start a new game",
-    "Game is running, good luck!",
+    "BLACK WON",
+    "WHITE WON!",
+    "Game running...",
 };
 
 
@@ -31,7 +30,7 @@ Vector2 pos2RectPos(uint8_t pos, Color_e player_color)
         row = N_ROWS - 1 - row;
         col = 2 * N_COLS - 1 - col;
     }
-    return (Vector2){col * SQUARE_SIZE, row * SQUARE_SIZE};
+    return (Vector2){col * SQUARE_SIZE, BANNER_HEIGHT + row * SQUARE_SIZE};
 }
 
 uint8_t mousePos2Pos(
@@ -41,10 +40,11 @@ uint8_t mousePos2Pos(
 {
     // Check is the mouse is on the board at all
     if (mousePosition->x > 2 * N_COLS * SQUARE_SIZE || 
-            mousePosition->y > N_ROWS * SQUARE_SIZE)
+            mousePosition->y > BANNER_HEIGHT + N_ROWS * SQUARE_SIZE ||
+            mousePosition->y < BANNER_HEIGHT)
         return N_PAWNS;
     uint8_t col = (uint8_t)(mousePosition->x / SQUARE_SIZE); 
-    uint8_t row = N_ROWS - 1 - (uint8_t)(mousePosition->y / SQUARE_SIZE); 
+    uint8_t row = N_ROWS - 1 - (uint8_t)((mousePosition->y - BANNER_HEIGHT) / SQUARE_SIZE); 
     // Check if it's black square or not
     if ((row % 2 && !(col % 2)) || (!(row % 2) && (col % 2)))
         return N_SQUARES;
@@ -76,7 +76,7 @@ void drawBoard(
     uint8_t i;
     for (i = 0; i < N_COLS * 2; i++) {
         for (uint8_t j = 0; j < N_ROWS; j++) {
-            rectPos = (Vector2){.x = i * SQUARE_SIZE, .y = j * SQUARE_SIZE};
+            rectPos = (Vector2){.x = i * SQUARE_SIZE, .y = BANNER_HEIGHT + j * SQUARE_SIZE};
             if ((!(i % 2) && !(j % 2)) || ((i % 2) && (j % 2)))
                 SquareColor = BEIGE;
             else 
@@ -216,38 +216,63 @@ void updateDrawFrame(
 
         // Draw Panel Controls
         // Set `info_text`
-        if (!(hs->game_started))
+        if (hs->winner == BLACK_C) 
             info_texts_ind = 0;
-        else if (hs->winner == BLACK_C) 
-            info_texts_ind = 1;
         else if (hs->winner == WHITE_C) 
-            info_texts_ind = 2;
+            info_texts_ind = 1;
         else 
-            info_texts_ind = 3;
+            info_texts_ind = 2;
 
-        GuiTextBox((Rectangle){SQUARE_SIZE / 10, BOARD_HEIGHT + SQUARE_SIZE / 2, 2 * BOARD_WIDTH / 5, SQUARE_SIZE}, info_texts[info_texts_ind], 45, false);
+        DrawText("HASENSPIEL", BOARD_WIDTH / 2 - 6 * SQUARE_SIZE / 4, BANNER_HEIGHT / 10, SQUARE_SIZE / 2, BLACK);
+        DrawText(info_texts[info_texts_ind], BOARD_WIDTH / 2 - 3 * SQUARE_SIZE / 4, 2 * BANNER_HEIGHT / 3, SQUARE_SIZE / 4, BLACK);
 
-        if (GuiButton((Rectangle){BOARD_WIDTH / 2 - SQUARE_SIZE / 3, BOARD_HEIGHT + SQUARE_SIZE / 2, 2 * SQUARE_SIZE, SQUARE_SIZE}, "START NEW GAME")) {
+        if (GuiButton(
+                (Rectangle){
+                    BOARD_WIDTH / 2 - SQUARE_SIZE / 3, 
+                    BANNER_HEIGHT + BOARD_HEIGHT + SQUARE_SIZE / 4, 
+                    2 * SQUARE_SIZE, 
+                    SQUARE_SIZE
+                }, "START NEW GAME")) {
             hs->game_started = true;
             hs_init_actionstate(&hs->as);
             hs->winner = NOCOLOR;
             hs->player_on_turn = (hs->player_color == WHITE_C) ? true: false;
         }
-         if (GuiButton((Rectangle){BOARD_WIDTH / 2 + 15 * SQUARE_SIZE / 8,  BOARD_HEIGHT + SQUARE_SIZE / 2, 2 * SQUARE_SIZE, SQUARE_SIZE}, "SWITCH COLOR")) {
+         if (GuiButton(
+                (Rectangle){
+                    BOARD_WIDTH / 2 + 15 * SQUARE_SIZE / 8,  
+                    BANNER_HEIGHT + BOARD_HEIGHT + SQUARE_SIZE / 4, 
+                    2 * SQUARE_SIZE, 
+                    SQUARE_SIZE
+                }, "SWITCH COLOR")) {
             hs->player_color = (hs->player_color == BLACK_C) ? WHITE_C: BLACK_C;
-           hs->max_a = (hs->player_color == WHITE_C) ? N_WHITE_ACTIONS: N_BLACK_ACTIONS;
+            hs->max_a = (hs->player_color == WHITE_C) ? N_WHITE_ACTIONS: N_BLACK_ACTIONS;
             hs->player_on_turn = ((hs->as.state & 1) && hs->player_color == WHITE_C) || (!(hs->as.state & 1) && hs->player_color == BLACK_C);
             take_action = hs->player_on_turn;
             hs->action_selected = N_WHITE_ACTIONS;
         }
-        GuiSlider((Rectangle){SQUARE_SIZE, BOARD_HEIGHT + 2 * SQUARE_SIZE, BOARD_WIDTH - 3 * SQUARE_SIZE / 2, SQUARE_SIZE / 3}, "Computer\nStrength", TextFormat("%.0f%%", hs->computer_strength), &hs->computer_strength, 0, 100);
+        GuiSlider(
+            (Rectangle){
+                SQUARE_SIZE, 
+                BANNER_HEIGHT + BOARD_HEIGHT + 7 * SQUARE_SIZE / 4, 
+                BOARD_WIDTH - 3 * SQUARE_SIZE / 2, 
+                SQUARE_SIZE / 3
+            }, "Computer\nStrength", TextFormat("%.0f%%", hs->computer_strength), &hs->computer_strength, 0, 100);
 
-        GuiTextBox((Rectangle){SQUARE_SIZE / 10, BOARD_HEIGHT + 13 * SQUARE_SIZE / 4, BOARD_WIDTH - SQUARE_SIZE / 5, 3 * SQUARE_SIZE / 2}, help_text, 30, false); 
+        GuiTextBox(
+            (Rectangle){
+                SQUARE_SIZE / 10, 
+                BANNER_HEIGHT + BOARD_HEIGHT + 10 * SQUARE_SIZE / 4, 
+                BOARD_WIDTH - SQUARE_SIZE / 5, 
+                11 * SQUARE_SIZE / 8
+            }, help_text, 30, false); 
 
         drawBoard(hs->as.state, &hs->wpawn_texture, &hs->bpawn_texture, hs->player_color, hs->pawn_selected, hs->action_selected, hs->max_a, hs->possible_squares); 
         if (take_action) {
             // if player clicked on the board:
-            if (mousePosition.x < BOARD_WIDTH && mousePosition.y < BOARD_HEIGHT) {
+            if (mousePosition.x < BOARD_WIDTH && 
+                    mousePosition.y < BANNER_HEIGHT + BOARD_HEIGHT && 
+                    mousePosition.y > BANNER_HEIGHT) {
                 handleBoardClick(
                     &mousePosition, 
                     hs->as.state, 
@@ -334,7 +359,7 @@ int main(void)
 {
     // Start with UI
     const int screenWidth = BOARD_WIDTH;
-    const int screenHeight = BOARD_HEIGHT + 10 * SQUARE_SIZE / 2; 
+    const int screenHeight = BANNER_HEIGHT + BOARD_HEIGHT + 4 * SQUARE_SIZE; 
 
     InitWindow(screenWidth, screenHeight, "Hasenspiel");
 
