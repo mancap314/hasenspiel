@@ -145,6 +145,7 @@ void handleBoardClick(
 
     if (pos >= N_SQUARES)
         return;
+
     for (uint8_t i = 0; i < N_PAWNS; i++) {
         if (player_color == WHITE_C  && i > 0)
             break;
@@ -156,7 +157,7 @@ void handleBoardClick(
             return;
         }
     }
-    if (*pawn_selected < N_PAWNS) {
+    if (*pawn_selected < N_PAWNS || player_color == WHITE_C) {
         *action_selected = clicked_move(max_a, possible_squares, pos);
         return;
     }
@@ -182,7 +183,7 @@ void get_possible_squares(
         fprintf(stderr, "[ERROR] get_possible_squares(): black on turn but white pawn 0 selected.\n");
         return;
     }
-    // as->actions = hs_get_possible_actions(as->state);
+    as->actions = hs_get_possible_actions(as->state);
     uint8_t shift = (as->state & 1) ? 0: N_BLACK_ACTIONS * (pawn_selected - 1);
     for (uint8_t a = 0; a < max_a; a++) {
         if ((as->actions >> shift) & ACTION_MASK(a))
@@ -263,6 +264,13 @@ void updateDrawFrame(
             hs_init_actionstate(&hs->as);
             hs->winner = NOCOLOR;
             hs->player_on_turn = (hs->player_color == WHITE_C) ? true: false;
+            if (hs->player_color == WHITE_C) {
+                get_possible_squares(&hs->as, 0, N_WHITE_ACTIONS, hs->possible_squares);      
+            }
+            else {
+                for (i = 0; i < N_WHITE_ACTIONS; i++)
+                    hs->possible_squares[i] = 0;
+            }
             for (i = 0; i < HISTORY_SIZE; i++)
                 hs->history[i] = (i == 0) ? hs->as.state : 0;
             hs->current_history_ind = 0;
@@ -280,6 +288,9 @@ void updateDrawFrame(
             hs->player_on_turn = ((hs->as.state & 1) && hs->player_color == WHITE_C) || (!(hs->as.state & 1) && hs->player_color == BLACK_C);
             take_action = hs->player_on_turn;
             hs->action_selected = N_WHITE_ACTIONS;
+            if (hs->player_color == WHITE_C) {
+                get_possible_squares(&hs->as, hs->pawn_selected, hs->max_a, hs->possible_squares);      
+            }
         }
         GuiSlider(
             (Rectangle){
@@ -314,10 +325,10 @@ void updateDrawFrame(
                     &hs->pawn_selected, 
                     &hs->action_selected
                 );
-                if (hs->pawn_selected < N_PAWNS) {
+                if (hs->pawn_selected < N_PAWNS || hs->player_color == WHITE_C) {
                     if (hs->action_selected < hs->max_a) {  // perform user action
                         action_code = 1 << hs->action_selected;
-                        if (hs->pawn_selected > 0)
+                        if (hs->pawn_selected > 0 && hs->player_color == BLACK_C)
                             action_code <<= (N_BLACK_ACTIONS * (hs->pawn_selected - 1));
                         ret = hs_perform_action(&hs->as, action_code);             
                         if (ret == EXIT_FAILURE) {
@@ -376,6 +387,13 @@ void updateDrawFrame(
             hs->current_history_ind++;
             hs->max_history_ind++;
             hs->history[hs->current_history_ind] = hs->as.state;
+
+            hs->player_on_turn = true;
+            hs->as.actions = hs_get_possible_actions(hs->as.state);
+            hs->winner = GET_VICTORY(hs->as.state, hs->as.actions);
+            if (hs->winner == NOCOLOR && hs->player_color == WHITE_C) {
+                get_possible_squares(&hs->as, 0, N_WHITE_ACTIONS, hs->possible_squares);      
+            }
             
             drawBoard(
                 hs->as.state, 
@@ -387,9 +405,6 @@ void updateDrawFrame(
                 hs->max_a, 
                 hs->possible_squares); 
 
-            hs->player_on_turn = true;
-            hs->as.actions = hs_get_possible_actions(hs->as.state);
-            hs->winner = GET_VICTORY(hs->as.state, hs->as.actions);
         }
     EndDrawing();
 }
@@ -419,13 +434,19 @@ int main(void)
     hs.player_on_turn = (hs.player_color == WHITE_C) ? true: false;
     hs.pawn_selected = N_PAWNS;
     hs.action_selected = N_WHITE_ACTIONS;
-    for (i = 0; i < N_WHITE_ACTIONS; i++)
-        hs.possible_squares[i] = 0;
-    hs.n_possible_moves = 0;
+    hs.max_a = (hs.player_color == WHITE_C) ? N_WHITE_ACTIONS: N_BLACK_ACTIONS;
+    if (hs.player_color == WHITE_C) {
+        get_possible_squares(&hs.as, 0, hs.max_a, hs.possible_squares);      
+        hs.n_possible_moves = 2;
+    }
+    else {
+        for (i = 0; i < N_WHITE_ACTIONS; i++)
+            hs.possible_squares[i] = 0;
+        hs.n_possible_moves = 0;
+    }
     hs.winner = NOCOLOR;
     hs.computer_strength = 100.0f;  // must be between 0 and 100 (included)
     hs.game_started = true;
-    hs.max_a = (hs.player_color == WHITE_C) ? N_WHITE_ACTIONS: N_BLACK_ACTIONS;
     for (i = 0; i < HISTORY_SIZE; i++)
         hs.history[i] = (i == 0) ? hs.as.state : 0;
     hs.current_history_ind = 0;

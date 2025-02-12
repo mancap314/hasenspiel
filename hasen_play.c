@@ -50,7 +50,7 @@ int comp_estates(const void *e1, const void *e2) {
     else if (!(es1->can_force_victory) && es2->can_force_victory) 
         ret = white_playing ? -1 : 1;
 
-    else if ((white_playing && es2->sltbv == 1) || (!white_playing && es2->sltwv == 1))
+    else if ((white_playing && es2->sltbv <= 2) || (!white_playing && es2->sltwv <= 1))
         ret = -1;
     
     else if ((white_playing && es2->sltwv < es1->sltwv) || (!white_playing && es2->sltbv < es1->sltbv))
