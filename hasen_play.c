@@ -3,11 +3,11 @@
 
 void print_estate(estate_t *e)
 {
-    printf("-state: ");
+    printf("-state:");
     for (uint8_t i = 0; i < N_PAWNS; i++)
         printf("%u%s", GET_POSITION(e->state, i), i == N_PAWNS - 1 ? "\n": ", ");
-    printf("- perc_victory: %.2f%%\n- can_force_victory: %s\n",
-           e->perc_victory, e->can_force_victory ? "True": "False");
+    printf("- perc_victory: %.2f%%\n- can_force_victory: %s\n- sltbv: %u\n- sltwv: %u\n",
+           e->perc_victory, e->can_force_victory ? "True": "False", e->sltbv, e->sltwv);
 }
 
 int find_estate(
@@ -34,6 +34,8 @@ int find_estate(
     estate->state = state;
     estate->perc_victory = ALL_ESTATES[current_ind].perc_victory;
     estate->can_force_victory = ALL_ESTATES[current_ind].can_force_victory;
+    estate->sltbv = ALL_ESTATES[current_ind].sltbv;
+    estate->sltwv = ALL_ESTATES[current_ind].sltwv;
     return EXIT_SUCCESS;
 }
 
@@ -44,18 +46,30 @@ int comp_estates(const void *e1, const void *e2) {
     bool white_playing = !(es1->state & 1);
     int ret = 0;
     if (es1->can_force_victory && !es2->can_force_victory) 
+        ret = white_playing ? 1 : -1;
+    else if (!(es1->can_force_victory) && es2->can_force_victory) 
+        ret = white_playing ? -1 : 1;
+
+    else if ((white_playing && es2->sltbv == 1) || (!white_playing && es2->sltwv == 1))
         ret = -1;
-    else if (!es1->can_force_victory && es2->can_force_victory) 
+    
+    else if ((white_playing && es2->sltwv < es1->sltwv) || (!white_playing && es2->sltbv < es1->sltbv))
         ret = 1;
+    else if ((white_playing && es2->sltwv > es1->sltwv) || (!white_playing && es2->sltbv > es1->sltbv))
+        ret = -1;
+    
     else if (es1->perc_victory > es2->perc_victory)
-        ret = 1;
+        ret = white_playing ? -1: 1;
     else if (es1->perc_victory < es2->perc_victory)
+        ret = white_playing ? 1: -1;
+
+    else if ((white_playing && es2->sltbv > es1->sltbv) || (!white_playing && es2->sltwv > es1->sltwv))
+        ret = 1;
+    else if ((white_playing && es2->sltbv < es1->sltbv) || (!white_playing && es2->sltwv < es1->sltwv))
         ret = -1;
+
     else 
         ret = ((float)rand() / (float)(RAND_MAX)) > 0.5 ? 1: -1;
-
-    if (!(es1->state & 1) && (ret == 1 || ret == -1))  // white is on turn
-        ret = -ret;
 
     return ret;
 }

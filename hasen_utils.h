@@ -12,6 +12,8 @@ typedef struct {
 typedef struct {
     double n_games;  // n_games starting from there
     double n_black_victories;  // among those n_games
+    uint8_t sltbv;  // shortest length to black victory
+    uint8_t sltwv;  // shortest length to white victory
     bool can_force_victory;
     bool is_computed;
 } Record;

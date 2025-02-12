@@ -59,11 +59,17 @@ int hs_simulate_all_games(
     Color_e victory = GET_VICTORY(as.state, as.actions);
     if (victory != NOCOLOR) {
         ++(*n_games_simulated);
-        if (!(as.state & 1))
+        if (!(as.state & 1)) {
+            records[state_ind].sltwv = 0;
+            records[state_ind].sltbv = 200;  // much larger than any game length
             n_black_victories = 1E-27;
+        } else {
+            records[state_ind].sltwv = 200;
+            records[state_ind].sltbv = 0;
+        }
         records[state_ind].n_games = 1E-27;
         records[state_ind].n_black_victories = n_black_victories;
-        records[state_ind].can_force_victory = (victory == BLACK_C); 
+        records[state_ind].can_force_victory = (victory == BLACK_C);
         return EXIT_SUCCESS;
     }
     uint8_t n_max_possible_actions = (as.state & 1) ? N_WHITE_ACTIONS: (N_PAWNS - 1) * N_BLACK_ACTIONS;
@@ -71,6 +77,8 @@ int hs_simulate_all_games(
     ActionState copied_as = {0};
     int ret;
     uint32_t next_state_ind = 0;
+    records[state_ind].sltbv = 200;
+    records[state_ind].sltwv = 200;
     records[state_ind].can_force_victory = (as.state & 1) ? true : false;
     for (uint8_t i = 0; i < n_max_possible_actions && (as.actions >> i); i++) {
         current_action = (1 << i);
@@ -84,7 +92,6 @@ int hs_simulate_all_games(
             return EXIT_FAILURE;
         }
         next_state_ind = copied_as.state - shift_pos;
-        // DEBUG
         if (next_state_ind >= max_n_states || copied_as.state < shift_pos) {
             fprintf(stderr, "[ERROR] hs_simulate_all_games(): next_state_ind = %u >= max_n_states = %u, or copied_as.state = %u < shift_pos = %u.\n", next_state_ind, max_n_states, copied_as.state, shift_pos);
             fprintf(stderr, "Previous state:\n");
@@ -110,12 +117,18 @@ int hs_simulate_all_games(
         }
         records[state_ind].n_black_victories += records[next_state_ind].n_black_victories;
         records[state_ind].n_games += records[next_state_ind].n_games;
+        if (records[next_state_ind].sltbv < records[state_ind].sltbv)
+            records[state_ind].sltbv = records[next_state_ind].sltbv;
+        if (records[next_state_ind].sltwv < records[state_ind].sltwv)
+            records[state_ind].sltwv = records[next_state_ind].sltwv;
         // If one of the next states can't force victory, then victory can be forced from this state
         if (as.state & 1)
             records[state_ind].can_force_victory &= records[next_state_ind].can_force_victory;
         else
             records[state_ind].can_force_victory |= records[next_state_ind].can_force_victory;
     }
+    records[state_ind].sltwv++; 
+    records[state_ind].sltbv++; 
     records[state_ind].is_computed = true;
     return EXIT_SUCCESS;
 }
@@ -150,6 +163,8 @@ int persist_records(
             "#include <stdbool.h>\n\n"
             "typedef struct {\n"
             "\tuint32_t state;\n"
+            "\tuint32_t sltbv;\n"
+            "\tuint32_t sltwv;\n"
             "\tfloat perc_victory;\n"
             "\tbool can_force_victory;\n"
             "} estate_t;\n\n"  
@@ -168,7 +183,12 @@ int persist_records(
             n_states);
     for (uint32_t i = 0; i < n_records; i++) {
         if (records[i].n_games == 0) continue;  // nothing at i
-        fprintf(f, "\t{%#x,%f,%x},\n", i + shift_pos, records[i].n_black_victories / records[i].n_games * 100, records[i].can_force_victory);
+        fprintf(f, "\t{%#x,%u,%u,%f,%x},\n", 
+                i + shift_pos, 
+                records[i].sltbv,
+                records[i].sltwv,
+                100.0 * (float)records[i].n_black_victories / (float)records[i].n_games, 
+                records[i].can_force_victory);
     }
     fprintf(f, "};\n");
     fclose(f);

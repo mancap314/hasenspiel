@@ -244,7 +244,7 @@ void updateDrawFrame(
             info_texts_ind = 2;
 
         DrawText("HASENSPIEL", BOARD_WIDTH / 2 - 6 * SQUARE_SIZE / 4, BANNER_HEIGHT / 10, SQUARE_SIZE / 2, BLACK);
-        DrawText(info_texts[info_texts_ind], BOARD_WIDTH / 2 - SQUARE_SIZE, 2 * BANNER_HEIGHT / 3, SQUARE_SIZE / 4, BLACK);
+        DrawText(info_texts[info_texts_ind], BOARD_WIDTH / 2 - SQUARE_SIZE, 2 * BANNER_HEIGHT / 3, (info_texts_ind < 2) ? SQUARE_SIZE / 3 : SQUARE_SIZE / 4, BLACK);
 
         GuiDrawIcon(114, backwardRectangle.x - ICON_PIXEL_SIZE, backwardRectangle.y -ICON_PIXEL_SIZE , ICON_PIXEL_SIZE, BLACK);
         DrawRectangleLinesEx(backwardRectangle, 2, BLACK);
@@ -352,6 +352,13 @@ void updateDrawFrame(
                 return;
             }
             // Chose computer's move
+#ifdef DEBUG
+            printf("[DEBUG] possible moves for computer:\n");
+            for (i = 0; i <hs->n_possible_moves; i++) {
+                printf("move %u:\n", i);
+                print_estate(&hs->next_estates[i]);
+            }
+#endif
             for (i = 0; i < hs->n_possible_moves; i++) {
                 if (i == hs->n_possible_moves - 1)
                     hs->as.state = hs->next_estates[i].state;

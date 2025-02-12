@@ -6,6 +6,8 @@
 
 typedef struct {
 	uint32_t state;
+	uint32_t sltbv;
+	uint32_t sltwv;
 	float perc_victory;
 	bool can_force_victory;
 } estate_t;
