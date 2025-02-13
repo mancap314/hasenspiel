@@ -18,17 +18,18 @@
 #define HISTORY_SIZE    (100)
 
 typedef struct {
+    Texture2D wpawn_texture;
+    Texture2D bpawn_texture;
     bool game_started;
     bool player_on_turn;
     Color_e winner;
     Color_e player_color; 
     ActionState as;
+    uint8_t value;  // value of the current_state
     uint8_t action_selected;
     uint8_t pawn_selected;
     float computer_strength;
     uint8_t possible_squares[N_WHITE_ACTIONS];
-    Texture2D wpawn_texture;
-    Texture2D bpawn_texture;
     estate_t next_estates[N_MAX_MOVES];
     uint8_t n_possible_moves;
     uint8_t max_a;

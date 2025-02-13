@@ -203,6 +203,9 @@ void handle_forbackward(
     hs->as.state = hs->history[hs->current_history_ind];
     hs->as.actions = hs_get_possible_actions(hs->as.state);
     hs->winner = GET_VICTORY(hs->as.state, hs->as.actions);
+    int ret = find_state_value(hs->as.state, &hs->value);
+    if (ret != EXIT_SUCCESS)
+        exit(ret);
     if (hs->player_color == WHITE_C) {
         get_possible_squares(&hs->as, 0, N_WHITE_ACTIONS, hs->possible_squares);      
     }
@@ -253,6 +256,11 @@ void updateDrawFrame(
         else 
             info_texts_ind = 2;
 
+        // Banner is green when rabbit kann escape, red if not, with alpha inv. prop to state value
+        Color banner_color = (hs->value & 1) ? GREEN: RED;
+        banner_color.a = 0xff / 5 - MIN(4 * (hs->value >> 1) / 5, 0xff / 5);
+        DrawRectangle(0, 0, BOARD_WIDTH, BANNER_HEIGHT, banner_color);
+
         DrawText("HASENSPIEL", BOARD_WIDTH / 2 - 6 * SQUARE_SIZE / 4, BANNER_HEIGHT / 10, SQUARE_SIZE / 2, BLACK);
         DrawText(info_texts[info_texts_ind], BOARD_WIDTH / 2 - SQUARE_SIZE, 2 * BANNER_HEIGHT / 3, (info_texts_ind < 2) ? SQUARE_SIZE / 3 : SQUARE_SIZE / 4, BLACK);
 
@@ -273,6 +281,10 @@ void updateDrawFrame(
             hs_init_actionstate(&hs->as);
             hs->winner = NOCOLOR;
             hs->player_on_turn = (hs->player_color == WHITE_C) ? true: false;
+            int ret = find_state_value(hs->as.state, &hs->value); ;
+            if (ret != EXIT_SUCCESS)
+                exit(ret);
+
             if (hs->player_color == WHITE_C) {
                 get_possible_squares(&hs->as, 0, N_WHITE_ACTIONS, hs->possible_squares);      
             }
@@ -350,6 +362,10 @@ void updateDrawFrame(
                         hs->current_history_ind++;
                         hs->max_history_ind = hs->current_history_ind;
                         hs->history[hs->current_history_ind] = hs->as.state;
+                        ret = find_state_value(hs->as.state, &hs->value);
+                        if (ret != EXIT_SUCCESS)
+                            exit(ret);
+
                     } else 
                         get_possible_squares(&hs->as, hs->pawn_selected, hs->max_a, hs->possible_squares);      
                 }
@@ -378,10 +394,13 @@ void updateDrawFrame(
                 printf("move %u:\n", i);
                 print_estate(&hs->next_estates[i]);
             }
+            printf("[DEBUG] Value of current_state: %u%s\n",
+                    hs->value >> 1, (hs->value & 1) ? "white": "black");
 #endif
             for (i = 0; i < hs->n_possible_moves; i++) {
-                if (i == hs->n_possible_moves - 1)
+                if (i == hs->n_possible_moves - 1) {
                     hs->as.state = hs->next_estates[i].state;
+                }
                 randomFloat = (float)rand() / (float)RAND_MAX * 100;
                 if (randomFloat <= hs->computer_strength) {
                     hs->as.state = hs->next_estates[i].state;
@@ -403,6 +422,9 @@ void updateDrawFrame(
             if (hs->winner == NOCOLOR && hs->player_color == WHITE_C) {
                 get_possible_squares(&hs->as, 0, N_WHITE_ACTIONS, hs->possible_squares);      
             }
+            ret = find_state_value(hs->as.state, &hs->value);
+            if (ret != EXIT_SUCCESS)
+                exit(ret);
             
             drawBoard(
                 hs->as.state, 
@@ -444,6 +466,9 @@ int main(void)
     hs.pawn_selected = N_PAWNS;
     hs.action_selected = N_WHITE_ACTIONS;
     hs.max_a = (hs.player_color == WHITE_C) ? N_WHITE_ACTIONS: N_BLACK_ACTIONS;
+    int ret = find_state_value(hs.as.state, &hs.value);
+    if (ret != EXIT_SUCCESS)
+        return ret;
     if (hs.player_color == WHITE_C) {
         get_possible_squares(&hs.as, 0, hs.max_a, hs.possible_squares);      
         hs.n_possible_moves = 2;

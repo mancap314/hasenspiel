@@ -6,8 +6,7 @@
 
 typedef struct {
 	uint32_t state;
-	uint8_t black_value;
-	uint8_t white_value;
+	uint8_t value;
 } estate_t;
 
 extern const estate_t ALL_ESTATES[776283];

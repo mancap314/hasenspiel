@@ -6,9 +6,13 @@ void print_estate(estate_t *e)
     printf("-state:");
     for (uint8_t i = 0; i < N_PAWNS; i++)
         printf("%u%s", GET_POSITION(e->state, i), i == N_PAWNS - 1 ? "\n": ", ");
-    printf("- black_value: %u\n- white_value: %u\n",
-           e->black_value, e->white_value);
+    uint8_t value = (e->value >> 1);
+    uint8_t white_value = (e->value & 1) ? value: 0;
+    uint8_t black_value = (e->value & 1) ? 0: value;
+    printf("- e->value: %u, value: %u\nblack_value: %u\n- white_value: %u\n",
+           e->value, value, black_value, white_value);
 }
+
 
 int find_estate(
     const uint32_t state, 
@@ -32,8 +36,19 @@ int find_estate(
         previous_direction = current_direction;
     }
     estate->state = state;
-    estate->black_value = ALL_ESTATES[current_ind].black_value;
-    estate->white_value = ALL_ESTATES[current_ind].white_value;
+    estate->value = ALL_ESTATES[current_ind].value;
+    return EXIT_SUCCESS;
+}
+
+int find_state_value(
+    const uint32_t state,
+    uint8_t *value
+) {
+    estate_t e = {0};
+    int ret = find_estate(state, &e);
+    if (ret != EXIT_SUCCESS)
+        return ret;
+    *value = e.value;
     return EXIT_SUCCESS;
 }
 
@@ -42,10 +57,15 @@ int comp_estates(const void *e1, const void *e2) {
     estate_t *es2 = (estate_t *)e2;
 
     bool white_playing = !(es1->state & 1);
-    uint8_t value1 = white_playing ? es1->black_value: es1->white_value;
-    uint8_t value2 = white_playing ? es2->black_value: es2->white_value;
-    uint8_t opp_value1 = white_playing ? es1->white_value: es1->black_value;
-    uint8_t opp_value2 = white_playing ? es2->white_value: es2->black_value;
+    uint8_t bv1 = (es1->value & 1) ? 0: (es1->value >> 1);
+    uint8_t wv1 = (bv1 > 0) ? 0: (es1->value >> 1);
+    uint8_t bv2 = (es2->value & 1) ? 0: (es2->value >> 1);
+    uint8_t wv2 = (bv2 > 0) ? 0: (es2->value >> 1);
+
+    uint8_t value1 = white_playing ? bv1: wv1;
+    uint8_t value2 = white_playing ? bv2: wv2;
+    uint8_t opp_value1 = white_playing ? wv1: bv1;
+    uint8_t opp_value2 = white_playing ? wv2: bv2;
     int ret = 0;
     // Can force win if value is 0
     if (value1 == 0 && value2 == 0) {

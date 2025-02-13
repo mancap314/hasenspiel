@@ -5,12 +5,15 @@
 #include "all_estates.h"
 #include <errno.h>
 
-#define COMP_VALUES(v, w) (((w) == 0 || ((v) > 0 && (v) < (w))) ? 1: -1) 
-
 
 int comp_estates(const void *e1, const void *e2);
 
 void print_estate(estate_t *e);
+
+int find_state_value(
+    const uint32_t state,
+    uint8_t *value
+);
 
 int find_estate(
     const uint32_t state, 

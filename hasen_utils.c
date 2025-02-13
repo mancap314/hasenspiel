@@ -174,8 +174,7 @@ int persist_records(
             "#include <stdbool.h>\n\n"
             "typedef struct {\n"
             "\tuint32_t state;\n"
-            "\tuint8_t black_value;\n"
-            "\tuint8_t white_value;\n"
+            "\tuint8_t value;\n"
             "} estate_t;\n\n"  
             "extern const estate_t ALL_ESTATES[%u];\n\n" 
             "#endif\n", n_states);
@@ -190,12 +189,16 @@ int persist_records(
     fprintf(f, "#include \"all_estates.h\"\n\n"
             "const estate_t ALL_ESTATES[%u] = {\n",
             n_states);
+    uint8_t current_value;
     for (uint32_t i = 0; i < n_records; i++) {
         if (records[i].n_games == 0) continue;  // nothing at i
-        fprintf(f, "\t{%#x,%u,%u},\n", 
+        current_value = (records[i].black_value > 0) ? records[i].black_value: records[i].white_value;
+        current_value <<= 1;
+        if (records[i].white_value)
+            current_value |= 1;
+        fprintf(f, "\t{%#x,%#x},\n", 
                 i + shift_pos, 
-                records[i].black_value,
-                records[i].white_value);
+                current_value);
     }
     fprintf(f, "};\n");
     fclose(f);
