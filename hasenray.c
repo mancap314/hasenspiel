@@ -193,6 +193,21 @@ void get_possible_squares(
     }
 }
 
+void handle_forbackward(
+    hasenray_state_t *hs,
+    bool backward
+)
+{
+    int8_t shift = backward ? -2: 2;
+    hs->current_history_ind += shift; 
+    hs->as.state = hs->history[hs->current_history_ind];
+    hs->as.actions = hs_get_possible_actions(hs->as.state);
+    hs->winner = GET_VICTORY(hs->as.state, hs->as.actions);
+    if (hs->player_color == WHITE_C) {
+        get_possible_squares(&hs->as, 0, N_WHITE_ACTIONS, hs->possible_squares);      
+    }
+}
+
 void updateDrawFrame(
     hasenray_state_t *hs
 )
@@ -216,18 +231,12 @@ void updateDrawFrame(
 
             bool goBackward = CheckCollisionPointRec(mousePosition, backwardRectangle);
             if (goBackward && (hs->current_history_ind >= 2)) {
-                hs->current_history_ind -= 2;
-                hs->as.state = hs->history[hs->current_history_ind];
-                hs->as.actions = hs_get_possible_actions(hs->as.state);
-                hs->winner = GET_VICTORY(hs->as.state, hs->as.actions);
+                handle_forbackward(hs, true);
             }
 
             bool goForward = CheckCollisionPointRec(mousePosition, forwardRectangle);
             if (goForward && (hs->current_history_ind + 2 < hs->max_history_ind)) {
-                hs->current_history_ind += 2;
-                hs->as.state = hs->history[hs->current_history_ind];
-                hs->as.actions = hs_get_possible_actions(hs->as.state);
-                hs->winner = GET_VICTORY(hs->as.state, hs->as.actions);
+                handle_forbackward(hs, false);
             }
 
             take_action = (hs->game_started && hs->player_on_turn && hs->winner == NOCOLOR);
