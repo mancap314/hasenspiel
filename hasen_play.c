@@ -61,7 +61,10 @@ int comp_estates(const void *e1, const void *e2) {
         ret = 1;
     } else {
         // both values > 0: can't force anyway. Chose harder move for opponent
-        ret = (value1 > value2) ? -1: 1; 
+        ret = (value1 > value2) ? -1: (value1 < value2 ? 1: 0); 
+    }
+    if (ret == 0) { // both options equally bad
+        ret = (es1->state > es2->state) ? 1: -1;
     }
     return ret;
 }
