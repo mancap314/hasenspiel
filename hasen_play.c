@@ -6,8 +6,8 @@ void print_estate(estate_t *e)
     printf("-state:");
     for (uint8_t i = 0; i < N_PAWNS; i++)
         printf("%u%s", GET_POSITION(e->state, i), i == N_PAWNS - 1 ? "\n": ", ");
-    printf("- perc_victory: %.2f%%\n- can_force_victory: %s\n- sltbv: %u\n- sltwv: %u\n",
-           e->perc_victory, e->can_force_victory ? "True": "False", e->sltbv, e->sltwv);
+    printf("- black_value: %u\n- white_value: %u\n",
+           e->black_value, e->white_value);
 }
 
 int find_estate(
@@ -32,10 +32,8 @@ int find_estate(
         previous_direction = current_direction;
     }
     estate->state = state;
-    estate->perc_victory = ALL_ESTATES[current_ind].perc_victory;
-    estate->can_force_victory = ALL_ESTATES[current_ind].can_force_victory;
-    estate->sltbv = ALL_ESTATES[current_ind].sltbv;
-    estate->sltwv = ALL_ESTATES[current_ind].sltwv;
+    estate->black_value = ALL_ESTATES[current_ind].black_value;
+    estate->white_value = ALL_ESTATES[current_ind].white_value;
     return EXIT_SUCCESS;
 }
 
@@ -44,33 +42,27 @@ int comp_estates(const void *e1, const void *e2) {
     estate_t *es2 = (estate_t *)e2;
 
     bool white_playing = !(es1->state & 1);
+    uint8_t value1 = white_playing ? es1->black_value: es1->white_value;
+    uint8_t value2 = white_playing ? es2->black_value: es2->white_value;
+    uint8_t opp_value1 = white_playing ? es1->white_value: es1->black_value;
+    uint8_t opp_value2 = white_playing ? es2->white_value: es2->black_value;
     int ret = 0;
-    if (es1->can_force_victory && !es2->can_force_victory) 
-        ret = white_playing ? 1 : -1;
-    else if (!(es1->can_force_victory) && es2->can_force_victory) 
-        ret = white_playing ? -1 : 1;
-
-    else if ((white_playing && es2->sltbv <= 2) || (!white_playing && es2->sltwv <= 1))
+    // Can force win if value is 0
+    if (value1 == 0 && value2 == 0) {
+        // if not so close to victory, chose one at random, more fun :)
+        if (opp_value1 > 5 && opp_value2 > 5)
+            ret = ((double)rand() / (double)RAND_MAX > 0.5) ? 1: -1;
+        else {  // plays completely optimally if close to victory
+            ret = (opp_value2 > opp_value1) ? -1: 1;
+        }
+    } else if (value1 == 0) {
         ret = -1;
-    
-    else if ((white_playing && es2->sltwv < es1->sltwv) || (!white_playing && es2->sltbv < es1->sltbv))
+    } else if (value2 == 0) {
         ret = 1;
-    else if ((white_playing && es2->sltwv > es1->sltwv) || (!white_playing && es2->sltbv > es1->sltbv))
-        ret = -1;
-    
-    else if (es1->perc_victory > es2->perc_victory)
-        ret = white_playing ? -1: 1;
-    else if (es1->perc_victory < es2->perc_victory)
-        ret = white_playing ? 1: -1;
-
-    else if ((white_playing && es2->sltbv > es1->sltbv) || (!white_playing && es2->sltwv > es1->sltwv))
-        ret = 1;
-    else if ((white_playing && es2->sltbv < es1->sltbv) || (!white_playing && es2->sltwv < es1->sltwv))
-        ret = -1;
-
-    else 
-        ret = ((float)rand() / (float)(RAND_MAX)) > 0.5 ? 1: -1;
-
+    } else {
+        // both values > 0: can't force anyway. Chose harder move for opponent
+        ret = (value1 > value2) ? -1: 1; 
+    }
     return ret;
 }
 

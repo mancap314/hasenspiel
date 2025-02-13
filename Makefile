@@ -23,7 +23,7 @@ generate_all_estates: generate_all_estates.c hasen_utils.c hasen.c
 	# ./$@.$(EXT)
 
 hasenray: all_estates.c hasen_play.c hasenray.c hasen_utils.c hasen.c
-	$(CC) -o $@.$(EXT) $^ $(CFLAGS) $(RAYFLAGS)
+	$(CC) -o $@.$(EXT) $^ $(CFLAGS) $(RAYFLAGS) -DDEBUG
 	./$@.$(EXT)
 
 hasenrayweb: all_estates.c hasenray.c hasen_play.c hasen_utils.c hasen.c

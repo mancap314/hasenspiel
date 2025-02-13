@@ -6,10 +6,8 @@
 
 typedef struct {
 	uint32_t state;
-	uint32_t sltbv;
-	uint32_t sltwv;
-	float perc_victory;
-	bool can_force_victory;
+	uint8_t black_value;
+	uint8_t white_value;
 } estate_t;
 
 extern const estate_t ALL_ESTATES[776283];

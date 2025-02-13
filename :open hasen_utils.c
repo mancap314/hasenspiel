@@ -18,7 +18,6 @@ typedef struct {
     uint8_t sltbv;  // shortest length to black victory
     uint8_t sltwv;  // shortest length to white victory
     uint8_t black_value;
-    uint8_t white_value;
     bool can_force_victory;
     bool is_computed;
 } Record;

@@ -70,6 +70,8 @@ int hs_simulate_all_games(
         records[state_ind].n_games = 1E-27;
         records[state_ind].n_black_victories = n_black_victories;
         records[state_ind].can_force_victory = (victory == BLACK_C);
+        records[state_ind].black_value = (victory == BLACK_C) ? 1: 0;
+        records[state_ind].white_value = (victory == BLACK_C) ? 0: 1;
         return EXIT_SUCCESS;
     }
     uint8_t n_max_possible_actions = (as.state & 1) ? N_WHITE_ACTIONS: (N_PAWNS - 1) * N_BLACK_ACTIONS;
@@ -80,6 +82,8 @@ int hs_simulate_all_games(
     records[state_ind].sltbv = 200;
     records[state_ind].sltwv = 200;
     records[state_ind].can_force_victory = (as.state & 1) ? true : false;
+    records[state_ind].black_value = (as.state & 1) ? 1: 0;
+    records[state_ind].white_value = (as.state & 1) ? 0: 1;
     for (uint8_t i = 0; i < n_max_possible_actions && (as.actions >> i); i++) {
         current_action = (1 << i);
         if (!(as.actions & current_action)) 
@@ -122,13 +126,20 @@ int hs_simulate_all_games(
         if (records[next_state_ind].sltwv < records[state_ind].sltwv)
             records[state_ind].sltwv = records[next_state_ind].sltwv;
         // If one of the next states can't force victory, then victory can be forced from this state
-        if (as.state & 1)
+        if (as.state & 1) {
             records[state_ind].can_force_victory &= records[next_state_ind].can_force_victory;
-        else
+            records[state_ind].black_value = MIN_VALUE(records[state_ind].black_value, records[next_state_ind].black_value);
+            records[state_ind].white_value = MAX_VALUE(records[state_ind].white_value, records[next_state_ind].white_value);
+        } else {
             records[state_ind].can_force_victory |= records[next_state_ind].can_force_victory;
+            records[state_ind].black_value = MAX_VALUE(records[state_ind].black_value, records[next_state_ind].black_value);
+            records[state_ind].white_value = MIN_VALUE(records[state_ind].white_value, records[next_state_ind].white_value);
+        }
     }
     records[state_ind].sltwv++; 
     records[state_ind].sltbv++; 
+    if (records[state_ind].black_value > 0) records[state_ind].black_value++; 
+    if (records[state_ind].white_value > 0) records[state_ind].white_value++; 
     records[state_ind].is_computed = true;
     return EXIT_SUCCESS;
 }
@@ -144,10 +155,10 @@ int persist_records(
     for (uint32_t i = 0; i < n_records; i++) {
         if (records[i].n_games == 0) continue;  // nothing at i
         n_states++;
-        if (((i + shift_pos) & 1) && records[i].can_force_victory)
-            n_white_force++;
-        else if ((!((i + shift_pos) & 1)) && records[i].can_force_victory)
+        if (records[i].black_value > 0)
             n_black_force++;
+        else 
+            n_white_force++;
     }
     char current_filepath[MAX_PATH -1] = {0};
     sprintf(current_filepath, "%s%s", filepath, ".h");
@@ -163,10 +174,8 @@ int persist_records(
             "#include <stdbool.h>\n\n"
             "typedef struct {\n"
             "\tuint32_t state;\n"
-            "\tuint32_t sltbv;\n"
-            "\tuint32_t sltwv;\n"
-            "\tfloat perc_victory;\n"
-            "\tbool can_force_victory;\n"
+            "\tuint8_t black_value;\n"
+            "\tuint8_t white_value;\n"
             "} estate_t;\n\n"  
             "extern const estate_t ALL_ESTATES[%u];\n\n" 
             "#endif\n", n_states);
@@ -183,12 +192,10 @@ int persist_records(
             n_states);
     for (uint32_t i = 0; i < n_records; i++) {
         if (records[i].n_games == 0) continue;  // nothing at i
-        fprintf(f, "\t{%#x,%u,%u,%f,%x},\n", 
+        fprintf(f, "\t{%#x,%u,%u},\n", 
                 i + shift_pos, 
-                records[i].sltbv,
-                records[i].sltwv,
-                100.0 * (float)records[i].n_black_victories / (float)records[i].n_games, 
-                records[i].can_force_victory);
+                records[i].black_value,
+                records[i].white_value);
     }
     fprintf(f, "};\n");
     fclose(f);
