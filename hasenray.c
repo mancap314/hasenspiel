@@ -257,12 +257,15 @@ void updateDrawFrame(
             info_texts_ind = 2;
 
         // Banner is green when rabbit kann escape, red if not, with alpha inv. prop to state value
+        float top_banner_prop = 0.55f;
         Color banner_color = (hs->value & 1) ? GREEN: RED;
         banner_color.a = 0xff / 5 - MIN(4 * (hs->value >> 1) / 5, 0xff / 5);
-        DrawRectangle(0, 0, BOARD_WIDTH, BANNER_HEIGHT, banner_color);
+        DrawRectangle(0, 0, BOARD_WIDTH, (int)((float)BANNER_HEIGHT * top_banner_prop), banner_color);
 
         DrawText("HASENSPIEL", BOARD_WIDTH / 2 - 6 * SQUARE_SIZE / 4, BANNER_HEIGHT / 10, SQUARE_SIZE / 2, BLACK);
-        DrawText(info_texts[info_texts_ind], BOARD_WIDTH / 2 - SQUARE_SIZE, 2 * BANNER_HEIGHT / 3, (info_texts_ind < 2) ? SQUARE_SIZE / 3 : SQUARE_SIZE / 4, BLACK);
+        
+        DrawRectangle(0, (int)((float)BANNER_HEIGHT * top_banner_prop), BOARD_WIDTH, (int)((float)BANNER_HEIGHT * (1.0f - top_banner_prop)), hs->player_color == WHITE_C ? WHITE: BLACK); 
+        DrawText(info_texts[info_texts_ind], BOARD_WIDTH / 2 - SQUARE_SIZE, 2 * BANNER_HEIGHT / 3, (info_texts_ind < 2) ? SQUARE_SIZE / 3 : SQUARE_SIZE / 4, hs->player_color == WHITE_C ? BLACK: WHITE);
 
         GuiDrawIcon(114, backwardRectangle.x - ICON_PIXEL_SIZE, backwardRectangle.y -ICON_PIXEL_SIZE , ICON_PIXEL_SIZE, BLACK);
         DrawRectangleLinesEx(backwardRectangle, 2, BLACK);
