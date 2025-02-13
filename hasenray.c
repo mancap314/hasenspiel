@@ -400,10 +400,12 @@ void updateDrawFrame(
             for (i = 0; i < hs->n_possible_moves; i++) {
                 if (i == hs->n_possible_moves - 1) {
                     hs->as.state = hs->next_estates[i].state;
+                    hs->value = hs->next_estates[i].value;
                 }
                 randomFloat = (float)rand() / (float)RAND_MAX * 100;
                 if (randomFloat <= hs->computer_strength) {
                     hs->as.state = hs->next_estates[i].state;
+                    hs->value = hs->next_estates[i].value;
                     break;
                 }
             }
@@ -422,7 +424,6 @@ void updateDrawFrame(
             if (hs->winner == NOCOLOR && hs->player_color == WHITE_C) {
                 get_possible_squares(&hs->as, 0, N_WHITE_ACTIONS, hs->possible_squares);      
             }
-            ret = find_state_value(hs->as.state, &hs->value);
             if (ret != EXIT_SUCCESS)
                 exit(ret);
             
