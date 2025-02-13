@@ -398,15 +398,19 @@ void updateDrawFrame(
                     hs->value >> 1, (hs->value & 1) ? "white": "black");
 #endif
             for (i = 0; i < hs->n_possible_moves; i++) {
-                if (i == hs->n_possible_moves - 1) {
-                    hs->as.state = hs->next_estates[i].state;
-                    hs->value = hs->next_estates[i].value;
-                }
-                randomFloat = (float)rand() / (float)RAND_MAX * 100;
-                if (randomFloat <= hs->computer_strength) {
+                if (i == hs->n_possible_moves - 1 || hs->computer_strength >= 100) {
                     hs->as.state = hs->next_estates[i].state;
                     hs->value = hs->next_estates[i].value;
                     break;
+                } else {
+                    // The less the reduction factor, the stronger the computer
+                    randomFloat = (float)rand() / (float)RAND_MAX;
+                    randomFloat *= (randomFloat * 100);
+                    if (randomFloat <= hs->computer_strength) {
+                        hs->as.state = hs->next_estates[i].state;
+                        hs->value = hs->next_estates[i].value;
+                        break;
+                    }
                 }
             }
             hs->pawn_selected = N_PAWNS;
