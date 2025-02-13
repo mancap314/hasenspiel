@@ -27,6 +27,7 @@ hasenray: all_estates.c hasen_play.c hasenray.c hasen_utils.c hasen.c
 	./$@.$(EXT)
 
 hasenrayweb: all_estates.c hasenray.c hasen_play.c hasen_utils.c hasen.c
+	mkdir -p web
 	$(EMCC) -o web/$@.html $^ -D_DEFAULT_SOURCE \
 		-I. -I $(BASE_PATH)/raylib/src -I $(BASE_PATH)/raylib/src/external -I $(BASE_PATH)/raygui/src \
 		-L. -L $(BASE_PATH)/raylib/src -L $(BASE_PATH)/raygui/src \
@@ -35,6 +36,9 @@ hasenrayweb: all_estates.c hasenray.c hasen_play.c hasen_utils.c hasen.c
 		--preload-file resources \
 		-DPLATFORM_WEB \
 		-Os
+	mv web/hasenrayweb.html web/index.html
+	zip -r hasenspiel.zip web
+	@echo "[INFO] Zip ready at hasenspiel.zip"
 
 
 .PHONY: clean
