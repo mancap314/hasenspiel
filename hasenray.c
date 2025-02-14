@@ -61,6 +61,7 @@ uint8_t mousePos2Pos(
 
 
 void drawBoard(
+    const uint32_t previous_state,
     const uint32_t state, 
     const Texture2D *wpawn_texture, 
     const Texture2D *bpawn_texture,
@@ -84,6 +85,30 @@ void drawBoard(
             DrawRectangle(rectPos.x, rectPos.y, SQUARE_SIZE, SQUARE_SIZE, SquareColor);
         }
     }
+    if (previous_state > 0) {
+        uint8_t previous_pos = N_SQUARES, current_pos = N_SQUARES;
+        if (GET_POSITION(previous_state, 0) != GET_POSITION(state, 0)) {
+            // It was a white pawn's move 
+            previous_pos = GET_POSITION(previous_state, 0);
+            current_pos = GET_POSITION(state, 0);
+        } else {
+            for (i = N_PAWNS - 1; current_pos == N_SQUARES && i > 0; i--) {
+                if (previous_pos == N_SQUARES && GET_POSITION(previous_state, i) != GET_POSITION(state, i)) 
+                    previous_pos = GET_POSITION(previous_state, i);
+                if (previous_pos < N_SQUARES && GET_POSITION(state, i) != GET_POSITION(previous_state, i - 1))
+                    current_pos = GET_POSITION(state, i);
+            }
+        }
+        // Draw previous and current rectangles
+        Color move_color = GREEN;
+        rectPos = pos2RectPos(previous_pos, player_color);
+        move_color.a = 0x20;
+        DrawRectangle(rectPos.x, rectPos.y, SQUARE_SIZE, SQUARE_SIZE, move_color);
+        rectPos = pos2RectPos(current_pos, player_color);
+        move_color.a = 0x30;
+        DrawRectangle(rectPos.x, rectPos.y, SQUARE_SIZE, SQUARE_SIZE, move_color);
+    }
+
     Rectangle source = {.x = 0, .y = 0, .height = SPRITE_SIZE, .width = SPRITE_SIZE};
     for (i = 0; i < N_PAWNS; i++) {
         rectPos = pos2RectPos(GET_POSITION(state, i), player_color);
@@ -222,6 +247,7 @@ void updateDrawFrame(
     float randomFloat;
     int ret;
     uint8_t i;
+    uint32_t previous_state = (hs->current_history_ind > 0) ? hs->history[hs->current_history_ind - 1]: 0;
 
     Rectangle backwardRectangle = { SQUARE_SIZE / 4, BANNER_HEIGHT + BOARD_HEIGHT + SQUARE_SIZE / 4, SQUARE_SIZE, SQUARE_SIZE};
     Rectangle forwardRectangle = { backwardRectangle.x  + 3 * SQUARE_SIZE / 2, backwardRectangle.y, backwardRectangle.width, backwardRectangle.height};
@@ -299,6 +325,7 @@ void updateDrawFrame(
                 hs->history[i] = (i == 0) ? hs->as.state : 0;
             hs->current_history_ind = 0;
             hs->max_history_ind = 0;
+            previous_state = 0;
         }
          if (GuiButton(
                 (Rectangle){
@@ -332,7 +359,7 @@ void updateDrawFrame(
                 11 * SQUARE_SIZE / 8
             }, help_text, 30, false); 
 
-        drawBoard(hs->as.state, &hs->wpawn_texture, &hs->bpawn_texture, hs->player_color, hs->pawn_selected, hs->action_selected, hs->max_a, hs->possible_squares); 
+        drawBoard(previous_state, hs->as.state, &hs->wpawn_texture, &hs->bpawn_texture, hs->player_color, hs->pawn_selected, hs->action_selected, hs->max_a, hs->possible_squares); 
 
         if (take_action) {
             // if player clicked on the board:
@@ -351,6 +378,7 @@ void updateDrawFrame(
                 );
                 if (hs->pawn_selected < N_PAWNS || hs->player_color == WHITE_C) {
                     if (hs->action_selected < hs->max_a) {  // perform user action
+                        previous_state = hs->as.state;
                         action_code = 1 << hs->action_selected;
                         if (hs->pawn_selected > 0 && hs->player_color == BLACK_C)
                             action_code <<= (N_BLACK_ACTIONS * (hs->pawn_selected - 1));
@@ -374,6 +402,7 @@ void updateDrawFrame(
                 }
                 hs->winner = GET_VICTORY(hs->as.state, hs->as.actions);
                 drawBoard(
+                    previous_state,
                     hs->as.state, 
                     &hs->wpawn_texture, 
                     &hs->bpawn_texture, 
@@ -397,9 +426,10 @@ void updateDrawFrame(
                 printf("move %u:\n", i);
                 print_estate(&hs->next_estates[i]);
             }
-            printf("[DEBUG] Value of current_state: %u%s\n",
+            printf("[DEBUG] Value of current_state: %u (%s)\n",
                     hs->value >> 1, (hs->value & 1) ? "white": "black");
 #endif
+            previous_state = hs->as.state;
             for (i = 0; i < hs->n_possible_moves; i++) {
                 if (i == hs->n_possible_moves - 1 || hs->computer_strength >= 100) {
                     hs->as.state = hs->next_estates[i].state;
@@ -435,6 +465,7 @@ void updateDrawFrame(
                 exit(ret);
             
             drawBoard(
+                previous_state,
                 hs->as.state, 
                 &hs->wpawn_texture, 
                 &hs->bpawn_texture, 

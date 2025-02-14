@@ -46,6 +46,7 @@ uint8_t mousePos2Pos(
 );
 
 void drawBoard(
+    const uint32_t previous_state, 
     const uint32_t state, 
     const Texture2D *wpawn_texture, 
     const Texture2D *bpawn_texture,
