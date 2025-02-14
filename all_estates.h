@@ -9,6 +9,6 @@ typedef struct {
 	uint8_t value;
 } estate_t;
 
-extern const estate_t ALL_ESTATES[745589];
+extern const estate_t ALL_ESTATES[778341];
 
 #endif
