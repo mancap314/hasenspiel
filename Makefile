@@ -20,9 +20,9 @@ hasen_test: hasen_test.c hasen.c
 
 generate_all_estates: generate_all_estates.c hasen_utils.c hasen.c
 	$(CC) -o $@.$(EXT) $^ $(CFLAGS)
-	# ./$@.$(EXT)
+	./$@.$(EXT)
 
-hasenray: all_estates.c hasen_play.c hasenray.c hasen_utils.c hasen.c
+hasenray: all_estates.c hasen_play.c hasenray.c hasen.c
 	$(CC) -o $@.$(EXT) $^ $(CFLAGS) $(RAYFLAGS) -DDEBUG
 	./$@.$(EXT)
 

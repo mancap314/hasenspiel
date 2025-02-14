@@ -59,17 +59,9 @@ int hs_simulate_all_games(
     Color_e victory = GET_VICTORY(as.state, as.actions);
     if (victory != NOCOLOR) {
         ++(*n_games_simulated);
-        if (!(as.state & 1)) {
-            records[state_ind].sltwv = 0;
-            records[state_ind].sltbv = 200;  // much larger than any game length
-            n_black_victories = 1E-27;
-        } else {
-            records[state_ind].sltwv = 200;
-            records[state_ind].sltbv = 0;
-        }
+        if (victory == BLACK_C) 
+            records[state_ind].n_black_victories = 1E-27;
         records[state_ind].n_games = 1E-27;
-        records[state_ind].n_black_victories = n_black_victories;
-        records[state_ind].can_force_victory = (victory == BLACK_C);
         records[state_ind].black_value = (victory == BLACK_C) ? 1: 0;
         records[state_ind].white_value = (victory == BLACK_C) ? 0: 1;
         return EXIT_SUCCESS;
@@ -79,9 +71,6 @@ int hs_simulate_all_games(
     ActionState copied_as = {0};
     int ret;
     uint32_t next_state_ind = 0;
-    records[state_ind].sltbv = 200;
-    records[state_ind].sltwv = 200;
-    records[state_ind].can_force_victory = (as.state & 1) ? true : false;
     records[state_ind].black_value = (as.state & 1) ? 1: 0;
     records[state_ind].white_value = (as.state & 1) ? 0: 1;
     for (uint8_t i = 0; i < n_max_possible_actions && (as.actions >> i); i++) {
@@ -121,25 +110,20 @@ int hs_simulate_all_games(
         }
         records[state_ind].n_black_victories += records[next_state_ind].n_black_victories;
         records[state_ind].n_games += records[next_state_ind].n_games;
-        if (records[next_state_ind].sltbv < records[state_ind].sltbv)
-            records[state_ind].sltbv = records[next_state_ind].sltbv;
-        if (records[next_state_ind].sltwv < records[state_ind].sltwv)
-            records[state_ind].sltwv = records[next_state_ind].sltwv;
         // If one of the next states can't force victory, then victory can be forced from this state
         if (as.state & 1) {
-            records[state_ind].can_force_victory &= records[next_state_ind].can_force_victory;
             records[state_ind].black_value = MIN_VALUE(records[state_ind].black_value, records[next_state_ind].black_value);
             records[state_ind].white_value = MAX_VALUE(records[state_ind].white_value, records[next_state_ind].white_value);
         } else {
-            records[state_ind].can_force_victory |= records[next_state_ind].can_force_victory;
             records[state_ind].black_value = MAX_VALUE(records[state_ind].black_value, records[next_state_ind].black_value);
             records[state_ind].white_value = MIN_VALUE(records[state_ind].white_value, records[next_state_ind].white_value);
         }
     }
-    records[state_ind].sltwv++; 
-    records[state_ind].sltbv++; 
-    if (records[state_ind].black_value > 0) records[state_ind].black_value++; 
-    if (records[state_ind].white_value > 0) records[state_ind].white_value++; 
+    if (records[state_ind].black_value > 0) 
+        records[state_ind].black_value++; 
+    if (records[state_ind].white_value > 0) 
+        records[state_ind].white_value++; 
+
     records[state_ind].is_computed = true;
     return EXIT_SUCCESS;
 }

@@ -40,6 +40,9 @@
 #define GET_VICTORY(s, a)       ((((s) & 1) && !(a)) ? BLACK_C : (!(s & 1) && ((GET_POSITION(s, 0) < GET_POSITION(s, N_PAWNS - 1) + N_COLS) || (!a)) ? WHITE_C : NOCOLOR))
 #define MIN_REACHABLE_POS(s)    ((s) & 1 ? (s) - (4 * (N_COLS - 1)): (s) - 12)
 
+#define MIN_VALUE(v, w) (((v) == 0 || (w) == 0) ? 0: MAX(v, w))
+#define MAX_VALUE(v, w) (((v) > 0 && (w) > 0) ? MIN(v, w): MAX(v, w))
+
 typedef struct {
     uint32_t state;
     uint8_t actions;
@@ -53,7 +56,6 @@ typedef enum {
 
 uint8_t hs_get_possible_actions(const uint32_t state);
 void hs_init_actionstate(ActionState *as);
-void hs_init_actionstate_forward(ActionState *as);
 void hs_print_actionstate(const ActionState *as);
 int hs_perform_action(ActionState *as, const uint8_t action);
 uint32_t get_max_position();

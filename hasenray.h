@@ -57,6 +57,14 @@ void drawBoard(
     const uint8_t possible_squares[max_a]
 );
 
+
+uint8_t clicked_move(
+    const uint8_t max_a,
+    const uint8_t possible_squares[max_a], 
+    const uint8_t pos
+); 
+
+
 void handleBoardClick(
     const Vector2 *mousePosition, 
     const uint32_t state,
@@ -68,11 +76,6 @@ void handleBoardClick(
     uint8_t *action_selected
 );
 
-uint8_t clicked_move(
-    const uint8_t max_a,
-    const uint8_t possible_squares[max_a], 
-    const uint8_t pos
-); 
 
 void get_possible_squares(
     ActionState *as, 
@@ -80,6 +83,22 @@ void get_possible_squares(
     const uint8_t max_a,
     uint8_t possible_squares[max_a] 
 );
+
+
+void handle_forbackward(
+    hasenray_state_t *hs,
+    bool backward
+);
+
+
+void updateDrawFrame(
+    hasenray_state_t *hs
+);
+
+
+#if defined(PLATFORM_WEB)
+void main_loop(void* arg_);
+#endif
 
 #endif
 

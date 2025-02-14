@@ -4,8 +4,6 @@
 #include "hasen.h"
 #include <time.h>
 
-#define MIN_VALUE(v, w) (((v) == 0 || (w) == 0) ? 0: MAX(v, w))
-#define MAX_VALUE(v, w) (((v) > 0 && (w) > 0) ? MIN(v, w): MAX(v, w))
 
 typedef struct {
     size_t n_moves;
@@ -15,11 +13,8 @@ typedef struct {
 typedef struct {
     double n_games;  // n_games starting from there
     double n_black_victories;  // among those n_games
-    uint8_t sltbv;  // shortest length to black victory
-    uint8_t sltwv;  // shortest length to white victory
     uint8_t black_value;
     uint8_t white_value;
-    bool can_force_victory;
     bool is_computed;
 } Record;
 
