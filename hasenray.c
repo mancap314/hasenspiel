@@ -105,7 +105,7 @@ void drawBoard(
         move_color.a = 0x20;
         DrawRectangle(rectPos.x, rectPos.y, SQUARE_SIZE, SQUARE_SIZE, move_color);
         rectPos = pos2RectPos(current_pos, player_color);
-        move_color.a = 0x30;
+        move_color.a = 0x20;
         DrawRectangle(rectPos.x, rectPos.y, SQUARE_SIZE, SQUARE_SIZE, move_color);
     }
 

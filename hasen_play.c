@@ -71,8 +71,8 @@ int comp_estates(const void *e1, const void *e2) {
     if (value1 == 0 && value2 == 0) {
         // if not so close to victory, chose one at random, more fun :)
         if (opp_value1 > 5 && opp_value2 > 5)
-            // ret = ((double)rand() / (double)RAND_MAX > 0.5) ? 1: -1;
-            ret = (opp_value2 > opp_value1) ? 1: -1;
+            ret = ((double)rand() / (double)RAND_MAX > 0.5) ? 1: -1;
+            // ret = (opp_value2 > opp_value1) ? 1: -1;
         else {  // plays completely optimally if close to victory
             ret = (opp_value2 > opp_value1) ? -1: 1;
         }

@@ -37,7 +37,7 @@
 #define IS_ON_LEFT_EDGE(s, i)   (!(GET_POSITION(s, i) % (2 * N_COLS)))
 #define IS_ON_RIGHT_EDGE(s, i)  (!((GET_POSITION(s, i) + 1) % (2 * N_COLS)))
 #define IS_FEASIBLE(s, i, a)    (IS_IN_RANGE(s, i, a) && !(((a) == 0 || (a) == 2) && IS_ON_LEFT_EDGE(s, i)) && !(((a) == 1 || (a) == 3) && IS_ON_RIGHT_EDGE(s, i)))
-#define GET_VICTORY(s, a)       ((((s) & 1) && !(a)) ? BLACK_C : ((GET_POSITION(s, 0) < GET_POSITION(s, N_PAWNS - 1) + N_COLS - 1) || (!(s & 1) && (!a)) ? WHITE_C : NOCOLOR))
+#define GET_VICTORY(s, a)       ((((s) & 1) && !(a)) ? BLACK_C : ((GET_POSITION(s, 0) < GET_POSITION(s, N_PAWNS - 1) + N_COLS) || (!(s & 1) && (!a)) ? WHITE_C : NOCOLOR))
 #define MIN_REACHABLE_POS(s)    ((s) & 1 ? (s) - (4 * (N_COLS - 1)): (s) - 12)
 
 typedef struct {
