@@ -41,11 +41,18 @@ int main(int argc, char *argv[argc + 1]) {
     float duration = (float)(end - start) / CLOCKS_PER_SEC;
     printf("[INFO] All %zu end_games / %zu states traversed in %.3fs.\n", n_games_simulated, n_traversed, duration);
     uint32_t start_ind = as.state - shift_pos;
-    printf("[INFO] Record for initial state:\n\t* n_games: %.2fR\n\t* n_black_victories: %.2fR (%.2f%%)\n\t* %s can force victory\n",
+    printf("[INFO] Record for initial state:\n" 
+            "\t* n_games: %.2fR\n" 
+            "\t* n_black_victories: %.2fR (%.2f%%)\n" 
+            "\t* %s can force victory in max. %u moves\n",
             records[start_ind].n_games, 
             records[start_ind].n_black_victories, 
             records[start_ind].n_black_victories / records[start_ind].n_games * 100.0, 
-            records[start_ind].black_value > 0 ? "Black": "White");
+            records[start_ind].black_value > 0 ? "Black": "White",
+            records[start_ind].black_value > 0 
+                ? records[start_ind].black_value - 1
+                : records[start_ind].white_value - 1 
+            );
     char fpath[MAX_PATH - 3] = "all_estates";
     ret = persist_records(shift_pos, max_n_states, records, fpath);
     if (ret != EXIT_SUCCESS) {
